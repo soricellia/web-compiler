@@ -3,10 +3,10 @@
 
 Currently, my stack is set up as follows:
 
-	 -linux
-	 -nodejs
-	 -jquery/jquery packages (mostly for the text editor)
-	 -possible postgress in the future if i get around to it... lets build a compiler first
+* linux
+* nodejs
+* jquery/jquery packages (mostly for the text editor)
+* possible postgress in the future if i get around to it... lets build a compiler first
 
 ## Getting Started
 
