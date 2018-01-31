@@ -31,7 +31,7 @@ $(document).ready(function(){
 		// testing
 		console.log(editor.getValue());
 		
-		//send request to compile
+		//send request to compile (found in ajax-requests.js)
 		compile("/compile", editor.getValue(), function(){
 			// do something after compiling 
 		});
@@ -52,19 +52,22 @@ $(document).ready(function(){
 	document.getElementById("navConsole").onclick = toggleConsole;
 
 	// editor on change event handler
-	editor.on('change', function(cMirror){
-		consoleViewer.setValue(cMirror.getValue());
+	// CALLS LEXER
+	editor.on('change', function(codeEditor){
+		//consoleViewer.setValue(codeEditor.getValue());
+		
+		// call to my lexer to generate tokens
+		generateTokens(codeEditor.getValue(), function(tokens){
+			// tokens are returned here
+
+			var i; // loop counter
+			var html =""; // this is going to be displayed on the page
+			for(i = 0; i < tokens.length; i++){
+				html += "LEXER: " + tokens[i] + "\n";
+			}
+			consoleViewer.setValue(html);
+		})
 	});
 
 }); //end document.ready
 
-// send an ajex request to compile api
-function compile(theUrl, theData, callback){
-    var xmlHttp = new XMLHttpRequest();
-    xmlHttp.onreadystatechange = function() { 
-        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
-            callback(xmlHttp.responseText);
-    }
-    xmlHttp.open("POST", theUrl, true); // true for asynchronous 
-    xmlHttp.send(theData);
-}
