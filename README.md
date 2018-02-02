@@ -26,9 +26,9 @@ I am using node v9.4.0
 
 `nvm install v9.4.0`
 
-you should get a message at the end that looks like: Now using node v9.4.0 (npm v5.6.0)
+you should get a message at the end that looks like: `Now using node v9.4.0 (npm v5.6.0)`
 
-#### If you dont get the message, youll have to install NPM manually. 
+##### If you dont get the message, youll have to install NPM manually. 
 
 `apt-get install npm`
 
@@ -37,8 +37,8 @@ i'm using npm v5.6.0
 #### Download the project
 Clone my project, and nagivate to the project directory through a terminal: `cd web-compiler/`
 
-#### run the project
+#### Run the project
 
 Now, from a terminal type: `npm start`
 
-Access the application by going to your web browser and typing 127.0.0.1:3000
+Access the application by going to your web browser and typing: `127.0.0.1:3000`

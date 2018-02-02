@@ -1,9 +1,31 @@
-<div class="wrapper">
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#sidebar").mCustomScrollbar({
+                theme: "minimal"
+        });
+
+        $('#sidebarCollapse').on('click', function () {
+            $('#sidebar, #content').toggleClass('active');
+            $('.collapse.in').toggleClass('in');
+            $('#sidebarExpand').toggle();
+            $('a[aria-expanded=true]').attr('aria-expanded', 'false');
+        });
+
+        $('#sidebarExpand').on('click', function () {
+            $('#sidebar, #content').toggleClass('active');
+            $('.collapse.in').toggleClass('in');
+            $('#sidebarExpand').toggle();
+            $('a[aria-expanded=true]').attr('aria-expanded', 'false');
+        });
+    });
+
+</script>
 <!-- sidebar -->
 <nav id="sidebar">
 	<!-- sidebar header -->
 	<div class="sidebar-header">
-		<h3>Web Compiler</h3>
+		<a href="#" id="sidebarCollapse"><i class="glyphicon glyphicon-menu-left"></i>Files</a>
 	</div>
 
 	<!-- sidebar links -->

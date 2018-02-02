@@ -8,15 +8,27 @@
 		<nav>
     		<% include ../partials/sidebar %>
     	</nav>
-    	<div id="content">
-			<nav>
-				<% include ../partials/header %>
-			</nav>
+    	<div class="bmd-layout-container bmd-drawer-f-b bmd-drawer-overlay">
+    		<div id="content">
+				<nav>
+					<% include ../partials/header %>
+				</nav>
 
-			<textarea class="codemirror-textarea" id="codeEditor"></textarea>
-			<textarea class="codemirror-textarea" id="console"></textarea>	
-
+				<textarea class="codemirror-textarea" id="codeEditor"></textarea>
+				<script type="text/javascript">
+    				$(document).ready(function () {
+        				$('#consoleToggle').on('click', function () {
+            				$('#consoleDrawer').toggle('in');
+            			});
+            		});
+				</script>
+  				<div id="consoleDrawer" class="bmd-layout-drawer kitchen-sink-drawer">
+  					<div class="consoleArea"> 
+  					</div>
+  				</div>
+			</div>
 			<% include ../partials/footer %>
+		</div>
 		</div>
 	</div>
 </body>
