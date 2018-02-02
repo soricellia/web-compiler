@@ -1,6 +1,6 @@
 var editor = false;
 var consoleViewer = false;
-var consoleShowing = false;
+var editorExpanded = false;
 $(document).ready(function(){
 	// SET UP CODE MIRROR
 	
@@ -13,16 +13,7 @@ $(document).ready(function(){
 		});
 	}
 
-	// console
-	consoleElem = $(".codemirror-textarea")[1];
-	if(!consoleViewer){
-		consoleViewer = CodeMirror.fromTextArea(consoleElem, 
-		{
-			lineNumbers: false,
-			theme: "blackboard"
-		});
-		$(consoleViewer.getWrapperElement()).hide();
-	}
+	consoleViewer = $(".consoleArea");
 
 	// EVENT HANDLERS 
 
@@ -39,18 +30,15 @@ $(document).ready(function(){
 
 	document.getElementById("navCompile").onclick = sendCompileRequest;
 
-	// console onclick event handler
-	function toggleConsole(){
-		if(consoleShowing){
-			$(consoleViewer.getWrapperElement()).hide();
-			consoleShowing = false;
-		} else{
-			$(consoleViewer.getWrapperElement()).show();
-			consoleShowing = true;
-		}
-	}
-	document.getElementById("navConsole").onclick = toggleConsole;
-
+	$('#consoleToggle').on('click', function(){
+		if(editorExpanded){
+			$('.CodeMirror').css('height','50%');
+			editorExpanded = false;
+		}else{
+			$('.CodeMirror').css('height','88%');
+			editorExpanded = true;
+		}	
+	})
 	// editor on change event handler
 	// CALLS LEXER
 	editor.on('change', function(codeEditor){
@@ -61,11 +49,11 @@ $(document).ready(function(){
 			// tokens are returned here
 
 			var i; // loop counter
-			var html =""; // this is going to be displayed on the page
+			var output =""; // this is going to be displayed on the page
 			for(i = 0; i < tokens.length; i++){
-				html += "LEXER: " + tokens[i] + "\n";
+				output += "LEXER: " + tokens[i] + "<br />";
 			}
-			consoleViewer.setValue(html);
+			consoleViewer.html(output);
 		})
 	});
 
