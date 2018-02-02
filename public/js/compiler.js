@@ -13,6 +13,8 @@ $(document).ready(function(){
 		});
 	}
 
+	//we have to change the style via jquery
+	$('.CodeMirror-gutters').css('background', '#e9ebee');
 	consoleViewer = $(".consoleArea");
 
 	// EVENT HANDLERS 

@@ -1,18 +1,19 @@
-/*
-    DEMO STYLE
-*/
+/*******************************************************
+    STYLE.CSS
+************************************************************/
+
 @import "https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700";
 
 html, body{
 	height: 100%;
 }
 body {
-    font-family: 'Poppins', sans-serif;
-    background: #f7f7f7;
+    font-family: 'monospace', sans-serif;
+    background: #e9ebee;
 }
 
 p {
-    font-family: 'Poppins', sans-serif;
+    font-family: 'monospace', sans-serif;
     font-size: 1.1em;
     font-weight: 300;
     line-height: 1.7em;
@@ -91,19 +92,28 @@ a, a:hover, a:focus {
 }
 
 .kitchen-sink-drawer {
-    background: #f7f7f7;
-	padding-top: 35px;
-	padding-left: 30px;
-	height: 38%; 
+    background: #7386D5;
+	border-top: 2px solid #ddd;
+	padding-top: 40px;
+	padding-right: 15px;
+	padding-bottom: 15px;
+	padding-left: 15px;
+	height: 39.5%; 
+}
+
+div.CodeMirror-gutter .CodeMirror-linenumbers {
+	background:#e9ebee;
+	width:29px;
 }
 
 .consoleArea {
-	border-left: 1px solid #ddd;
-	border-top: 1px solid #ddd;
+	border: 2px solid #ddd;
+	border-radius: 15px;
 	color: black;
     background: #fff;
-    padding-top: 10px;
-    padding-left: 10px;
+    padding-top: 15px;
+    padding-left: 15px;
+    padding-right: 15px;
     height: 100%;
     font-family: monospace;
     font-size: 1.1em;
