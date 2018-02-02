@@ -1,28 +1,26 @@
 <!-- views/partials/header.ejs -->
 
-<nav class="navbar navbar-default" role="navigation">
-<div class="container-fluid">
-
-    <div class="navbar-header">
-            <a class="navbar-brand" id="file" href="#">
-                <span class="glyphicon glyphicon glyphicon-file"></span>
+<div class="navbar navbar-default" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" id="sidebarCollapse" class="btn btn-info navbar-btn">
+                <i class="glyphicon glyphicon glyphicon-file"></i>
                 File
-            </a>
+            </button>
+        </div>
         <ul class="nav navbar-nav">
             <li>
-                <a class="navbar-brand" id="navCompile" href="#">
-                    <span class="glyphicon glyphicon-play"></span>
+                <button type="button" id="navCompile" class="btn btn-info navbar-btn">
+                <i class="glyphicon glyphicon-play"></i>
                     Compile
-                </a>
+                </button>
             </li>
             <li>
-                <a class="navbar-brand" id="navConsole" href="#">
-                    <span class="glyphicon glyphicon-console"></span>
+                <button type="button" id="navConsole" class="btn btn-info navbar-btn">
+                <i class="glyphicon glyphicon-console"></i>
                     Console
-                </a>
+                </button>
             </li>
         </ul>
     </div>
-
 </div>
-</nav>

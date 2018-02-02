@@ -2,23 +2,22 @@
 
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <% include ../partials/head %>
-</head>
+<% include ../partials/head %>	
 <body class="container">
+	<div class="wrapper">
+		<nav>
+    		<% include ../partials/sidebar %>
+    	</nav>
+    	<div id="content">
+			<nav>
+				<% include ../partials/header %>
+			</nav>
 
-<header>
-    <% include ../partials/header %>
-</header>
+			<textarea class="codemirror-textarea" id="codeEditor"></textarea>
+			<textarea class="codemirror-textarea" id="console"></textarea>	
 
-<main>
-	<textarea class="codemirror-textarea" id="codeEditor"></textarea>
-	<textarea class="codemirror-textarea" id="console"></textarea>	
-</main>
-
-<footer>
-    <% include ../partials/footer %>
-</footer>
-
+			<% include ../partials/footer %>
+		</div>
+	</div>
 </body>
 </html>

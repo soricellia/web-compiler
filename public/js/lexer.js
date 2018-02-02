@@ -18,11 +18,12 @@ var re_newline  	= /\n/;
 var re_space    	= /\s/;
 var re_epoint		= /\!/;
 var re_boolop		= /(\=\=)|(\!\=)/;
-var re_boolval		= /(false)|(true)/;
-var re_type			= /(int)|(string)|(boolean)/;
-var re_if			= /if/;
-var re_while		= /while/;
-var re_comments 	= /(\/\*).*(\/\*)/g; // match all comments
+var re_boolval		= /(^false)|(^true)/;
+var re_type			= /(^int)|(^string)|(^boolean)/;
+var re_print        = /^print/;
+var re_if			= /^if/;
+var re_while		= /^while/;
+var re_comments 	= /\/\*.*\*\//gm; // match all comments
 
 // TOKEN DEFINITION
 function Token(type, value, linenumber){
@@ -46,6 +47,8 @@ var warnings = [];
 //KEEPING TRACK OF LINE NUMBERS
 var lineNumber = 1; // start from line 1
 
+// boolean value to tell if we're inside a string quote
+var inQuote = false; 
 
 /*******************************************************
 *	Entry point into lexer. Generates an array of tokens
@@ -56,9 +59,10 @@ function generateTokens(input, callback){
 	lineNumber = 1;
 	tokens = [];
 	errors = [];
+	inQuote = false;
 
-	// IGNORE ALL COMMENTS
-	var input = input.replace(re_comments, "");
+	// IGNORE ALL COMMENTS, REPLACE WITH SPACE TO KEEP COLUM NUMBERS
+	var input = input.replace(re_comments, " ");
 	
 	var i = 0; // this will increment my input string
 	var j = 0; // this will increment my tokens counter
@@ -93,10 +97,11 @@ function generateTokens(input, callback){
 *
 ****************************************************/
 function findNextLongestMatch(input, callback){
-	var tokenString = ""; // this will end up being our longest match
+	var tokenString = ""; // this builds our longest token
 	var matchFound = false; // boolean value so we know when were done looping
 	var nextChar = ""; // next character in input
-	var longestToken;
+	var longestToken = null; // this is what we're trying to find
+	
 	//while we havnt found a match, keep looking for one
 	while(input && !matchFound){
 		nextChar = input[0]; // get the next character
@@ -111,8 +116,21 @@ function findNextLongestMatch(input, callback){
 			// we ignore it
 			input = input.substring(1, input.length); //increment our input string
 		}
+		//check if this character is a quote
+		else if(re_string.test(nextChar)){
+			// we have to take all input and just make them normal char tokens
+			inQuote = !inQuote; // flip the switch
+
+			// and we found a match, namely the quote "
+			matchFound = true;
+			longestToken = convertToToken(nextChar, lineNumber);
+
+			//increment our input string
+			input = input.substring(1, input.length);
+
+		}
 		// lets try to find a longest match 
-		else{
+		else if(!inQuote){
 			charToken = convertToToken(nextChar, lineNumber);
 			
 			// if we dont have a str expr that means we found a single character token like "(){}"
@@ -126,8 +144,6 @@ function findNextLongestMatch(input, callback){
 					matchFound = true;
 
 					input = tokenString + input;
-
-					// input will be incremented at the end still
 				}
 				// nothing else to process, this should be a clean token
 				else{
@@ -153,16 +169,14 @@ function findNextLongestMatch(input, callback){
 						matchFound = true;
 
 						input = tokenString + input;
-
-						// input will be incremented at the end still
 					}
-					// we can just take this tokenString+char
+					// we can just take this tokenString+char as longestToken
 					else{
 				
 						tokenString = tokenString + nextChar;
 						longestToken = convertToToken(tokenString, lineNumber);
 					
-						matchFound = true;
+						//matchFound = true;
 					}
 				}
 				// if we get a str_expr that means we're not done
@@ -208,10 +222,30 @@ function findNextLongestMatch(input, callback){
 					// add the error to our list of errors
 					errors[errors.length-1] = longestToken
 				}
+				// this means we found a token with a longest match. 
+				// just flag it
+				else{
+					matchFound = true;
+				}
 			}
 			//increment our input string
 			input = input.substring(1, input.length);
-		}	
+		}
+		// this means we're in a quote! lets just process the token as a character token and keep it moving
+		else if(nextChar != "\""){
+			//process token into character token
+			longestToken = convertToToken(nextChar, lineNumber);
+
+			if(longestToken.type != "ERROR"){
+				longestToken.type = "t_char";
+			}
+			//increment our input string
+			input = input.substring(1, input.length);
+
+			//and a match was found
+			matchFound = true;	
+		}
+
 		//we're done looking for the longest match this iteration
 
 		// if we're at the end and we didnt find a longest match
@@ -225,11 +259,6 @@ function findNextLongestMatch(input, callback){
 
 			//switch input to the tokenString so we can return that to the callback
 			input = tokenString.substring(1, tokenString.length);
-		}
-		// if we're at the end and we didnt find a longest match
-		// we also have no more data. just return what we have
-		if(!input && !tokenString && !matchFound){
-			
 		}
 	} // end while
 
@@ -268,7 +297,10 @@ function convertToToken(input, lineNumber){
 	else if(re_type.test(input)){
 		return new Token("t_type", input, lineNumber);
 	}
-	else if(re_if.test(input)){
+	else if(re_print.test(input)){
+		return new Token("t_print", input, lineNumber)
+	}
+	else if(re_if.exec(input)){
 		return new Token("t_if", input, lineNumber);
 	}
 	else if(re_while.test(input)){
