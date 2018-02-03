@@ -23,7 +23,7 @@ var re_type			= /(^int)|(^string)|(^boolean)/;
 var re_print        = /^print/;
 var re_if			= /^if/;
 var re_while		= /^while/;
-var re_comments 	= /\/\*.*\*\//gm; // match all comments
+var re_comments 	= /\/\*.*\*\//g; // match all comments
 
 // TOKEN DEFINITION
 function Token(type, value, linenumber){
@@ -46,7 +46,7 @@ var warnings = [];
 
 //KEEPING TRACK OF LINE NUMBERS
 var lineNumber = 1; // start from line 1
-
+var lastLine = lineNumber;
 // boolean value to tell if we're inside a string quote
 var inQuote = false; 
 
@@ -60,6 +60,7 @@ function generateTokens(input, callback){
 	tokens = [];
 	errors = [];
 	inQuote = false;
+	lastLine = lineNumber;
 
 	// IGNORE ALL COMMENTS, REPLACE WITH SPACE TO KEEP COLUM NUMBERS
 	var input = input.replace(re_comments, " ");
@@ -252,10 +253,12 @@ function findNextLongestMatch(input, callback){
 		// therefore we start again with the current tokenString
 		if(!input && tokenString && !matchFound){
 			//convert first character into character token
-			longestToken = new Token("t_char", tokenString[0], lineNumber);
+			longestToken = new Token("t_char", tokenString[0], lastLine);
 
 			// we found a match (specificly, the match is a character [a-z])
 			matchFound = true;
+
+			lastLine++;
 
 			//switch input to the tokenString so we can return that to the callback
 			input = tokenString.substring(1, tokenString.length);
