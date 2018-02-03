@@ -12,9 +12,11 @@
 </header>
 
 <main>
-    <div class="jumbotron">
-        <h1>Opps</h1>
-        <p>error: <% message %> <% error %></p>
+    <div class="alert alert-danger">
+        <h1 class="alert-heading">Opps!</h1>
+        <strong>Error</strong>
+        <%= "(" + error.status + ") " + error.message %>
+        <strong><p class="mb-1"><a href="/">click here for safety</a></p></strong>
     </div>
 </main>
 
