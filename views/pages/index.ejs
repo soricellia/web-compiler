@@ -15,17 +15,8 @@
 				</nav>
 
 				<textarea class="codemirror-textarea" id="codeEditor"></textarea>
-				<script type="text/javascript">
-    				$(document).ready(function () {
-        				$('#consoleToggle').on('click', function () {
-            				$('#consoleDrawer').toggle('in');
-            			});
-            		});
-				</script>
-  				<div id="consoleDrawer" class="bmd-layout-drawer kitchen-sink-drawer">
-  					<div class="consoleArea"> 
-  					</div>
-  				</div>
+
+				<% include ../partials/consoleDiv %>
 			</div>
 			<% include ../partials/footer %>
 		</div>

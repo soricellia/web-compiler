@@ -9,7 +9,7 @@ html, body{
 }
 body {
     font-family: 'monospace', sans-serif;
-    background: #e9ebee;
+    background: #7386D5;
 }
 
 p {
@@ -32,6 +32,11 @@ a, a:hover, a:focus {
     background: white;
     height: 50%;
 }
+
+/** 
+	top navbar stuff
+**/
+
 .navbar {
     padding: 10px 10px;
     background: #6d7fcc;
@@ -91,33 +96,40 @@ a, a:hover, a:focus {
     margin: 40px 0;
 }
 
+
+/**
+	Console Styleing
+	**/
 .kitchen-sink-drawer {
     background: #7386D5;
-	border-top: 2px solid #ddd;
 	padding-top: 40px;
 	padding-right: 15px;
 	padding-bottom: 15px;
-	padding-left: 15px;
-	height: 39.5%; 
+	padding-left: 29px;
+	height: 39%; 
 }
 
-div.CodeMirror-gutter .CodeMirror-linenumbers {
-	background:#e9ebee;
-	width:29px;
+.inactive {
+	display:none;
 }
-
 .consoleArea {
-	border: 2px solid #ddd;
+	border: 2px inset #e9ebee;
 	border-radius: 15px;
 	color: black;
     background: #fff;
-    padding-top: 15px;
-    padding-left: 15px;
-    padding-right: 15px;
     height: 100%;
     font-family: monospace;
     font-size: 1.1em;
-    overflow-y:auto
+    padding-left: 15px;
+    padding-right: 5px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+#consoleContent {
+	border-radius: 8px;
+    height: 100%;
+    overflow-y:auto;
 }
 
 /* ---------------------------------------------------
@@ -142,11 +154,11 @@ div.CodeMirror-gutter .CodeMirror-linenumbers {
 #sidebar .sidebar-header {
     padding: 20px;
     background: #6d7fcc;
+    box-shadow: 1px 0px 3px rgba(0, 0, 0, 0.1);
 }
 
 #sidebar ul.components {
-    padding: 20px 0;
-    border-bottom: 1px solid #47748b;
+    padding: 39px 0;
 }
 
 #sidebar ul p {
