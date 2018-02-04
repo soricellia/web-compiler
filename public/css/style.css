@@ -105,33 +105,45 @@ a, a:hover, a:focus {
 	padding-top: 40px;
 	padding-right: 15px;
 	padding-bottom: 15px;
-	padding-left: 29px;
 	height: 39%; 
+    box-shadow: 0px 2px 1px rgba(0, 0, 0, 0.1) inset;
 }
 
 .inactive {
 	display:none;
 }
 .consoleArea {
-	border: 2px inset #e9ebee;
 	border-radius: 15px;
+    border-color: #6d7fcc;
+    border-width: 1px;
 	color: black;
     background: #fff;
     height: 100%;
     font-family: monospace;
     font-size: 1.1em;
-    padding-left: 15px;
-    padding-right: 5px;
+    padding-left: 3px;
+    padding-right: 3px;
     padding-top: 5px;
     padding-bottom: 5px;
 }
 
 #consoleContent {
-	border-radius: 8px;
+	border-radius: 5px;
     height: 100%;
     overflow-y:auto;
 }
 
+#consoleInfo {
+    display: none;
+}
+
+#consoleErrors {
+    display:none;
+}
+
+#consoleWarnings {
+    display:none;
+}
 /* ---------------------------------------------------
     SIDEBAR STYLE
 ----------------------------------------------------- */
@@ -241,7 +253,6 @@ a.article, a.article:hover {
 #content.active {
     width: 100%;
 }
-
 
 /* ---------------------------------------------------
     MEDIAQUERIES

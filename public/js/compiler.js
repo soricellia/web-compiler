@@ -1,19 +1,33 @@
-var editor = false;
-var editorExpanded = false;
-var cycle = 1;
+/***************************************************************
+*	compiler.js
+*		manages: lexer.js, parser.js, ast.js, codegen.js, 
+*				 console, codeEditor, ajax-requests.js
+*
+***************************************************************/
+
+
+var editor = false; // used to init codemirror for the first time
+
+//make sure we dont send programs with lex errors to compile
+var errors = false; 
+
+
 $(document).ready(function(){
+	try{
 	// SET UP CODE MIRROR
-	
-	// code editor
 	var code = $(".codemirror-textarea")[0];
 	if(!editor){
-		editor = CodeMirror.fromTextArea(code, {
-			lineNumbers: true,
-			theme: "neat"
-		});
+		if(code){
+			editor = CodeMirror.fromTextArea(code, {
+				lineNumbers: true,
+				theme: "neat",
+				mode: "javascript"
+			});
+		}
 	}
 
-	//we have to change the style via jquery
+	// TODO: POSSIBLE FIX
+	//we have to change the codemirror style via jquery
 	$('.CodeMirror-gutters').css('background', '#e9ebee');
 
 	// EVENT HANDLERS 
@@ -24,19 +38,26 @@ $(document).ready(function(){
 		console.log(editor.getValue());
 		
 		//send request to compile (found in ajax-requests.js)
-		compile("/compile", editor.getValue(), function(){
-			// do something after compiling 
+		compile("/compile", editor.getValue(), function(err){
+			// do something after compiling, like display data
+			// or give errors 
+			if(err){
+				console.log("ERROR!!!========\\n", err);
+			}
 		});
 	}
 
+	
+	// register the compile request function up above
+	// to nav-compile-button onclick event handler
 	document.getElementById("navCompile").onclick = sendCompileRequest;
 
-
-	// console toggler
+	// console-toggler-button onlick event handler
 	$('#consoleToggle').on('click', function(){
 		// check if the console drawer is open
 		if(!$('.kitchen-sink-drawer').hasClass("active")){
 			// if its not open lets go ahead and play the open animation
+			// .stop clears the animation queue so there are no hangups
 			$('.CodeMirror').stop().animate({height: '50%'}, {
 				duration: 300,
 				complete: function(){
@@ -66,21 +87,67 @@ $(document).ready(function(){
 	// editor on change event handler
 	// CALLS LEXER
 	editor.on('change', function(codeEditor){
-		//consoleViewer.setValue(codeEditor.getValue());
-		
-		// call to my lexer to generate tokens
-		generateTokens(codeEditor.getValue(), function(tokens){
-			// tokens are returned here
+		// call to lexer.js generate tokens function
+		generateTokens(codeEditor.getValue(), function(tokens, warnings, lexErrors){
+			// generate tokens callback
+			
+			// first lets clear the console
+			var consoleContent = $('#consoleInfo');
+			consoleContent.html("");
 
-			var consoleContent = $('#consoleContent');
+			// PRINT ALL TOKENS TO THE CONSOLE
 			var i; // loop counter
-			var output =""; // this is going to be displayed on the page
+			var output =""; // string we're building
 			for(i = 0; i < tokens.length; i++){
 				output += "LEXER: " + tokens[i] + "<br />";
 			}
-			consoleContent.html(output);
+			consoleContent.html(output); 
+			if(output.trim()){
+				consoleContent.css('display', 'block');	
+			}else{
+				consoleContent.css('display', 'none');
+			}
+			// PRINT OUR ERRORS
+			if(lexErrors.length !== 0){
+				output = "";
+				errors = true; // cant compile
+				for(i = 0; i < lexErrors.length; i++){
+					output += lexErrors[i] + "<br />";
+				}
+				$('#consoleErrors').html(output);
+				$('#consoleErrors').css('display', 'block');
+			}else{
+				errors = false // we can compile
+				$('#consoleErrors').css('display', 'none');
+			}
+
+			// PRINT OUR WARNINGS
+			if(warnings.length !== 0){
+				output = "";
+				for(i = 0; i < warnings.length; i++){
+					output +=  warnings[i] + "<br />";
+				}
+				$('#consoleWarnings').html(output);
+				$('#consoleWarnings').css('display', 'block');
+			}else{
+				$('#consoleWarnings').css('display', 'none');
+			}
+			// make sure our div scrolls with the content being added
+			consoleContent[0].scrollTop = consoleContent[0].scrollHeight;
+
 		})
 	});
 
+}catch(err){
+	console.log("COMPILER ERROR!!=================\\n", err)
+}
 }); //end document.ready
 
+
+// loads the editor with the program assoicated with programid
+// clicking a sidebar program calls this
+function loadEditor(programid){
+	loadProgram(programid, function(program){
+		editor.setValue(program);
+	})
+}

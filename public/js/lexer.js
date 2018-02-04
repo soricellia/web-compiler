@@ -59,6 +59,7 @@ function generateTokens(input, callback){
 	lineNumber = 1;
 	tokens = [];
 	errors = [];
+	warnings = [];
 	inQuote = false;
 	lastLine = lineNumber;
 
@@ -72,11 +73,21 @@ function generateTokens(input, callback){
 		findNextLongestMatch(input, function(longestToken, inputSubstring){
 			// if we found a matching longest Token
 			if(longestToken){
-				tokens[j] = longestToken; //take the longest match, and generate a token
-				j++; //increment our tokens list
+				if(longestToken.type != "ERROR"){
+					tokens[j] = longestToken; //store it
+					j++; //increment tokens list
+				}
+				// error token case
+				else{
+					errors.push(longestToken);
+				}
 			}
 			else{
-				// possible error here
+				// there is no longest match
+				// this means the input is probably a space or newline
+				// flag it as a warning
+				//warnings.push("LEXER: warning, a token could not be made"
+				// +"for input: "+ input);
 			}
 
 			// increment input
@@ -86,7 +97,7 @@ function generateTokens(input, callback){
 	} // end while
 
 	//return to the callback
-	callback(tokens);
+	callback(tokens, warnings, errors);
 }
 
 /****************************************************
@@ -211,17 +222,17 @@ function findNextLongestMatch(input, callback){
 							matchFound = true;
 						}
 						// we couldnt look one character ahead
-						// that means we should throw an error
+						// that means we're at the end of our input
 						else{
-							//TODO
-							console.log("error TODO");
+							//testing
+							console.log(input);
 						}
 					} // end assignment vs equality check
 				}
 				// error case
-				else if(longestToken.type == "error"){
+				else if(longestToken.type == "ERROR"){
 					// add the error to our list of errors
-					errors[errors.length-1] = longestToken
+					errors.push(longestToken);
 				}
 				// this means we found a token with a longest match. 
 				// just flag it
@@ -237,9 +248,11 @@ function findNextLongestMatch(input, callback){
 			//process token into character token
 			longestToken = convertToToken(nextChar, lineNumber);
 
+		/*	We want to retain the token type as per the grammer
 			if(longestToken.type != "ERROR"){
 				longestToken.type = "t_char";
 			}
+		*/
 			//increment our input string
 			input = input.substring(1, input.length);
 
