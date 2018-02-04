@@ -15,8 +15,6 @@ var errors = false;
 $(document).ready(function(){
 	try{
 	// SET UP CODE MIRROR
-	
-	// code editor
 	var code = $(".codemirror-textarea")[0];
 	if(!editor){
 		if(code){
@@ -28,6 +26,7 @@ $(document).ready(function(){
 		}
 	}
 
+	// TODO: POSSIBLE FIX
 	//we have to change the codemirror style via jquery
 	$('.CodeMirror-gutters').css('background', '#e9ebee');
 
@@ -88,25 +87,51 @@ $(document).ready(function(){
 	// editor on change event handler
 	// CALLS LEXER
 	editor.on('change', function(codeEditor){
-
 		// call to lexer.js generate tokens function
-		generateTokens(codeEditor.getValue(), function(tokens, err){
+		generateTokens(codeEditor.getValue(), function(tokens, warnings, lexErrors){
 			// generate tokens callback
 			
-			// error case, set a flag so we know we cant actually compile
-			if(err){
-				errors = true;
-			}
-			
-			// PRINT TO THE CONSOLE
-			var consoleContent = $('#consoleContent');
+			// first lets clear the console
+			var consoleContent = $('#consoleInfo');
+			consoleContent.html("");
+
+			// PRINT ALL TOKENS TO THE CONSOLE
 			var i; // loop counter
 			var output =""; // string we're building
 			for(i = 0; i < tokens.length; i++){
 				output += "LEXER: " + tokens[i] + "<br />";
 			}
 			consoleContent.html(output); 
+			if(output.trim()){
+				consoleContent.css('display', 'block');	
+			}else{
+				consoleContent.css('display', 'none');
+			}
+			// PRINT OUR ERRORS
+			if(lexErrors.length !== 0){
+				output = "";
+				errors = true; // cant compile
+				for(i = 0; i < lexErrors.length; i++){
+					output += lexErrors[i] + "<br />";
+				}
+				$('#consoleErrors').html(output);
+				$('#consoleErrors').css('display', 'block');
+			}else{
+				errors = false // we can compile
+				$('#consoleErrors').css('display', 'none');
+			}
 
+			// PRINT OUR WARNINGS
+			if(warnings.length !== 0){
+				output = "";
+				for(i = 0; i < warnings.length; i++){
+					output +=  warnings[i] + "<br />";
+				}
+				$('#consoleWarnings').html(output);
+				$('#consoleWarnings').css('display', 'block');
+			}else{
+				$('#consoleWarnings').css('display', 'none');
+			}
 			// make sure our div scrolls with the content being added
 			consoleContent[0].scrollTop = consoleContent[0].scrollHeight;
 
@@ -118,6 +143,9 @@ $(document).ready(function(){
 }
 }); //end document.ready
 
+
+// loads the editor with the program assoicated with programid
+// clicking a sidebar program calls this
 function loadEditor(programid){
 	loadProgram(programid, function(program){
 		editor.setValue(program);

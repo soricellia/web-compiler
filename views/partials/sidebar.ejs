@@ -10,6 +10,12 @@
             $('.collapse.in').toggleClass('in');
             $('#sidebarExpand').toggle();
             $('a[aria-expanded=true]').attr('aria-expanded', 'false');
+
+            // change the padding on my console drawer to watch a full
+            // screen look
+            $('#consoleDrawer').animate({'padding-left':'29px'}, {
+            	duration: 100
+            });
         });
 
         $('#sidebarExpand').on('click', function () {
@@ -17,6 +23,13 @@
             $('.collapse.in').toggleClass('in');
             $('#sidebarExpand').toggle();
             $('a[aria-expanded=true]').attr('aria-expanded', 'false');
+
+
+            // change the padding on my console drawer to match
+            // a windowed look
+            $('#consoleDrawer').animate({'padding-left':'0px'}, {
+            	duration: 100
+            });
         });
     });
 
