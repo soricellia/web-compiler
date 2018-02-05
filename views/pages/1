@@ -1,5 +1,9 @@
-if(a=b){
+if(a==b){
 	while(true){
-		c == "let!s test () this"
+		string files = "clicking files will hide the files sidebar for a fullscreen look"
+		string console = "click console to hide or display the console"
+		strind compile = "clicking compile sends an ajax request to compile only if there are no lexer errors"
+		string info = "use the end of program (eop) marker to end a program as found on line 9"
+		string lexer = "just type away with the console open to see the lexer work in real time"
 	}
-}
+}$

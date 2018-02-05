@@ -23,7 +23,9 @@ var re_type			= /(^int)|(^string)|(^boolean)/;
 var re_print        = /^print/;
 var re_if			= /^if/;
 var re_while		= /^while/;
-var re_comments 	= /\/\*.*\*\//g; // match all comments
+var re_comments 	= /\/\*([\s\S]*?)\*\//g;
+
+///(\/\*).*(\*\/)/g; // my original comment regex
 
 // TOKEN DEFINITION
 function Token(type, value, linenumber){
@@ -33,8 +35,19 @@ function Token(type, value, linenumber){
 }
 
 Token.prototype.toString = function tokenToString(){
-	return this.type + "(\"" + this.tokenValue + "\", " + this.linenumber + ")";
+	if(this.type == "ERROR"){
+		return "ERROR invalid token " + 
+			   this.tokenValue + 
+			   "  found on line number  "+
+			   this.linenumber;
+	}
+	else {
+		return this.type + "(\"" + 
+			   this.tokenValue + "\", " + 
+			   this.linenumber + ")";
+	}
 }
+
 // OUR LIST OF TOKENS
 var tokens = []; 
 
@@ -282,7 +295,7 @@ function findNextLongestMatch(input, callback){
 			//convert first character into character token
 			lineNumber = lineNumber - newLines;
 			if(tokenString[0] != '\n' && tokenString[0] != ' '){
-				longestToken = new Token("t_char1", tokenString[0], lineNumber);
+				longestToken = new Token("t_char", tokenString[0], lineNumber);
 
 			}
 			else{
@@ -295,6 +308,12 @@ function findNextLongestMatch(input, callback){
 			
 			//switch input to the tokenString so we can return that to the callback
 			input = tokenString.substring(1, tokenString.length);
+		}
+		if(longestToken){
+			if(longestToken.tokenValue == '\n' || longestToken.tokenValue == ' '){
+				// tos it out
+				longestToken = null;
+			}
 		}
 	} // end while
 
