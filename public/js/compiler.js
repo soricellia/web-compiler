@@ -23,6 +23,7 @@ $(document).ready(function(){
 					theme: "neat",
 					mode: "javascript"
 				});
+				loadEditor(1); // load the intro program
 			}
 		}
 
@@ -34,17 +35,29 @@ $(document).ready(function(){
 
 		// compile onclick event handler
 		function sendCompileRequest(){
-			// testing
-			console.log(editor.getValue());
-			
-			//send request to compile (found in ajax-requests.js)
-			compile("/compile", editor.getValue(), function(err){
-				// do something after compiling, like display data
-				// or give errors 
-				if(err){
-					console.log("ERROR!!!========\\n", err);
+			if(!compileErrors){
+				//send request to compile (found in ajax-requests.js)
+				compile("/compile", editor.getValue(), function(err){
+					// do something after compiling, like display data
+					// or give errors 
+					if(err){
+						console.log("ERROR!!!========\\n", err);
+					}
+				});
+			}
+			else{
+				var i;
+				var printErrors = ""; 
+				for(i = 0; i < errors.length; i++){
+					printErrors = '\n'
+								  +printErrors
+								  +errors[i].toString();
+					
 				}
-			});
+				alert("You have errors that need to be fixed before you can compile:"
+					  + '\n'
+					  + printErrors);
+			}
 		}
 
 		
@@ -139,7 +152,7 @@ function printToConsole(programNumber, tokens, warnings, errors){
 		$('#consoleErrors').append('<br /><div class=\"alert alert-danger\">Program ' +programNumber+' Lexed With '+errors.length+' errors.</div>')
 		$('#consoleErrors').css('display', 'block');
 	}else{
-		errors = false // we can compile
+		compileErrors = false // we can compile
 		$('#consoleErrors').css('display', 'none');
 		$('#consoleInfo').append('<br /><div class=\"alert alert-success\">Program ' +programNumber+' Lexed successfully.</div>');
 	}

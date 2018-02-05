@@ -1,1 +1,11 @@
-/*testing comments if("123") true while{} adfvrevwmlk!@$%(^*^(^)) */
+/*testing comments if("123") true while{} adfvrevwmlk!@%(^*^(^)) */
+if(a) /* comment */
+	whil /* comment */ e tr/* comment */ue
+/* comment */
+/* comment */
+/* comment */
+false
+/* comment */
+true
+/* comment */
+$
