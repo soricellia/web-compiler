@@ -76,6 +76,8 @@ function generateTokens(input, callback){
 				if(longestToken.type != "ERROR"){
 					tokens[j] = longestToken; //store it
 					j++; //increment tokens list
+					lineNumber = longestToken.linenumber; // store the last line we got a token from
+					 
 				}
 				// error token case
 				else{
@@ -113,7 +115,7 @@ function findNextLongestMatch(input, callback){
 	var matchFound = false; // boolean value so we know when were done looping
 	var nextChar = ""; // next character in input
 	var longestToken = null; // this is what we're trying to find
-	
+	var newLines = 0;
 	//while we havnt found a match, keep looking for one
 	while(input && !matchFound){
 		nextChar = input[0]; // get the next character
@@ -121,6 +123,8 @@ function findNextLongestMatch(input, callback){
 		// check if this character is a new line
 		if(re_newline.test(nextChar)){
 			lineNumber ++; // increment our line number
+			newLines++; 
+			tokenString = tokenString + nextChar;
 			input = input.substring(1, input.length); //increment our input string
 		}
 		// check if this character is a space
@@ -156,6 +160,8 @@ function findNextLongestMatch(input, callback){
 					matchFound = true;
 
 					input = tokenString + input;
+					if(longestToken.tokenValue == '\n')
+						longestToken = null;
 				}
 				// nothing else to process, this should be a clean token
 				else{
@@ -247,12 +253,20 @@ function findNextLongestMatch(input, callback){
 		else if(nextChar != "\""){
 			//process token into character token
 			longestToken = convertToToken(nextChar, lineNumber);
-
-		/*	We want to retain the token type as per the grammer
-			if(longestToken.type != "ERROR"){
-				longestToken.type = "t_char";
+			
+			// edge case testing for string expressions
+			if(longestToken.type == "str_expr"){
+				if(longestToken.tokenValue == '!'){
+					longestToken.type = "ERROR";
+				}
+				else if(longestToken.tokenValue == '='){
+					longestToken.type = "assignment";
+				}
+				else{
+					longestToken.type = "t_char";
+				}
 			}
-		*/
+
 			//increment our input string
 			input = input.substring(1, input.length);
 
@@ -266,13 +280,19 @@ function findNextLongestMatch(input, callback){
 		// therefore we start again with the current tokenString
 		if(!input && tokenString && !matchFound){
 			//convert first character into character token
-			longestToken = new Token("t_char", tokenString[0], lastLine);
+			lineNumber = lineNumber - newLines;
+			if(tokenString[0] != '\n' && tokenString[0] != ' '){
+				longestToken = new Token("t_char1", tokenString[0], lineNumber);
 
-			// we found a match (specificly, the match is a character [a-z])
+			}
+			else{
+				lineNumber++;
+				longestToken = null;
+			}
+
 			matchFound = true;
-
-			lastLine++;
-
+			//lastLine++;
+			
 			//switch input to the tokenString so we can return that to the callback
 			input = tokenString.substring(1, tokenString.length);
 		}
