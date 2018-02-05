@@ -144,6 +144,25 @@ a, a:hover, a:focus {
 #consoleWarnings {
     display:none;
 }
+
+.alert-info {
+    margin: 0;
+    padding: 10px;
+}
+
+.alert-danger {
+    margin:0;
+    padding: 10px;
+}
+
+.alert-error {
+    margin:0;
+    padding: 10px;
+}
+.alert-success {
+    margin:0;
+    padding: 10px;
+}
 /* ---------------------------------------------------
     SIDEBAR STYLE
 ----------------------------------------------------- */
