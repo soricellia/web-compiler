@@ -9,105 +9,140 @@
 		or
 		a list of errors if the parse failed
 ***************************************************************/
-var tree = require('./tree');
+var Tree = require('./tree');
 
-//we use to figure where were at while iterating over our tokens
-var index; 
-//constructor
 function Parser(){
 	// the parse tree
 	this.tree = new Tree();
 
 	//our index for iterating over tokens
 	this.index = 0;
-}
 
-Parser.parseTokens = function(tokens, done){
-	
-	//first we make a root node in the tree
-	tree.addNode("Root", "branch");
+	this.tokens = {};
+	this.errors = [];
 
+
+// public functions
+
+// called to init the parse program
+this.parseTokens = function(tokens, done){
+
+	this.tokens = tokens;
+	console.log("tokens: ", tokens)
+	this.errors.length = 0;
 	// start parsing our grammer
-	parseProgram(tokens, done);
+	this.parseProgram();
 
-	console.log(tree.toString());
-	// we made it here therefore we can just return the completed tree
-	done(null, this.tree); 
+	if(!this.errors.length > 0){
+		console.log("here");
+		console.log(this.tree.toString());
+
+		// we made it here therefore we can just return the completed tree
+		done(null, this.tree.toString());
+	}else{
+		// process our errors
+		console.log(this.errors);
+	} 
 }
 
-function parseProgram(tokens, done){
-	//using our ll1 grammer, we can look ahead one token.
-	var currentToken = getNext(tokens);
+this.parseProgram = function(){
+	// add the root node
+	this.tree.addNode("Program", "branch");
 
-	console.log(currentToken);
+	//using our ll1 grammer, we can look ahead one token.
+	var currentToken = this.getNext(this.tokens);
+	
+	console.log("current token: ", currentToken);
 
 	if(currentToken.type == "t_openBrace"){
-		tree.addNode("t_openBrace", "leaf");
-		match();
+		this.match(currentToken);
+	}else{
+		this.errors.push("Error on line " + currentToken.linenumber 
+			+ ", expecting open bracket \"{\" character."
+			+ " Hint: Try starting your program with a \"{\" character");
 	}
 }
 
-function parseStatementList(tokens, done){
+this.parseBlock = function(){
+	// since we're in a recursive mindfuck, we have to do
+	// things like this to bubble out of error case recursions
+	if(this.errors){
+		console.log(this.errors);
+	}else{
+
+	}
+}
+
+this.parseStatementList = function(tokens, done){
 
 }
 
-function parseStatement(tokens, done){
+this.parseStatement = function(tokens, done){
 
 }
 
-function parsePrintStatement(tokens, done){
+this.parsePrintStatement = function(tokens, done){
 
 }
 
-function parseAssignmentStatement(tokens, done){
+this.parseAssignmentStatement = function(tokens, done){
 
 }
 
-function parseVarDecl(tokens, done){
+this.parseVarDecl = function(tokens, done){
 	
 }
 
-function parseWhileStatement(tokens, done){
+this.parseWhileStatement = function(tokens, done){
 	
 }
 
-function parseIfStatement(tokens, done){
+this.parseIfStatement = function(tokens, done){
 	
 }
 
-function parseExpr(tokens, done){
+this.parseExpr = function(tokens, done){
 	
 }
 
-function parseIntExpr(tokens, done){
+this.parseIntExpr = function(tokens, done){
 	
 }
 
-function parseStringExpr(tokens, done){
+this.parseStringExpr = function(tokens, done){
 	
 }
 
-function parseBooleanExpr(tokens, done){
+this.parseBooleanExpr = function(tokens, done){
 	
 }
 
-function parseId(tokens, done){
+this.parseId = function(tokens, done){
 	
 }
 
-function parseCharList(tokens, done){
+this.parseCharList = function(tokens, done){
 	
 }
 
-function getNext(tokens){
-	if(tokens.length > index)
-		return tokens[i];
+
+// returns the next token in our list
+// or false if there are no more tokens
+this.getNext = function(){
+	if(this.tokens.length > this.index)
+		return this.tokens[this.index];
 	else
 		return false;
 }
-function match(){
+
+// increments the token counter 
+// adds the token as a leaf to the tree
+this.match = function(token){
+	this.tree.addNode(JSON.stringify(token.tokenValue), "leaf");
 	this.index++;
 }
+}
+
 module.exports = Parser;
 
 

@@ -4,7 +4,7 @@
 // By Alan G. Labouseur, based on the 2009
 // work by Michael Ardizzone and Tim Smith.
 //-----------------------------------------
-// edited to work for nodejs backend by Anthony Soricelli 
+
 
 function Tree() {
     // ----------
@@ -13,14 +13,14 @@ function Tree() {
     
     this.root = null;  // Note the NULL root node of this tree.
     this.cur = {};     // Note the EMPTY current node of the tree we're building.
-}
+
 
     // -- ------- --
     // -- Methods --
     // -- ------- --
 
     // Add a node: kind in {branch, leaf}.
-    Tree.addNode = function(name, kind) {
+    this.addNode = function(name, kind) {
         // Construct the node object.
         var node = { name: name,
                      children: [],
@@ -51,7 +51,7 @@ function Tree() {
     };
 
     // Note that we're done with this branch of the tree...
-    Tree.endChildren = function() {
+    this.endChildren = function() {
         // ... by moving "up" to our parent node (if possible).
         if ((this.cur.parent !== null) && (this.cur.parent.name !== undefined))
         {
@@ -65,7 +65,7 @@ function Tree() {
     };
 
     // Return a string representation of the tree.
-    Tree.toString = function() {
+    this.toString = function() {
         // Initialize the result string.
         var traversalResult = "";
 
@@ -103,5 +103,5 @@ function Tree() {
         return traversalResult;
     };
 
-
+}
 module.exports = Tree;
