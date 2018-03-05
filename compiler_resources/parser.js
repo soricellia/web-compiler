@@ -363,8 +363,8 @@ this.parseStringExpr = function(){
 		
 		// match " 
 		this.match(this.currentToken);
+		console.log("before charList", this.currentToken);
 		this.parseCharList();
-		this.kick();
 
 		this.currentToken = this.getNext();
 		if(this.currentToken.type == "t_string"){
@@ -453,10 +453,12 @@ this.parseId = function(){
 this.parseCharList = function(){
 	if(this.errors.length == 0){
 		this.currentToken = this.getNext();
-
-		if(this.currentToken.type = "t_char"){
+		console.log("in charlist: ", this.currentToken);		
+		if(this.currentToken.type == "t_char"){
 			// match char
 			this.match(this.currentToken);
+
+			console.log("in charlist: ", this.currentToken);
 			this.parseCharList();
 		}else{
 			// I DONT CARE ABOUT SPACES SO, 
@@ -480,7 +482,7 @@ this.getNext = function(){
 // increments the token counter 
 // adds the token as a leaf to the tree
 this.match = function(token){
-	this.tree.addNode(JSON.stringify(token.tokenValue), "leaf");
+	this.tree.addNode(token.tokenValue, "leaf");
 	this.index++;
 }
 
