@@ -1,13 +1,16 @@
 /****************************************************************
 	Parser.js
 	Input: 
-		List of tokens 
+		Constructor: parser(verbose)
+					-verbose outputs the stack trace made during the 
+					 recursive decent parse
+		parseTokens: parseTokens(tokens, done)
+					-tokens is a list of valid tokens for a++ grammer
+					-done is a callback function
 	Purpose:
 		parses list of tokens using alan++ language grammer
 	output:
-		a Syntax tree with the parsed tokens
-		or
-		a list of errors if the parse failed
+		return(errors, hints, verboseMessages, parseTree)
 ***************************************************************/
 var Tree = require('./tree');
 
@@ -16,7 +19,7 @@ const firstOfStatement = new Set(["t_print", "t_while", "t_if"
 
 const firstOfExpr = new Set(["t_digit", "t_string", "t_openParen", "t_char"]);
 
-function Parser(){
+function Parser(verbose){
 	// the parse tree
 	this.tree = new Tree();
 
@@ -27,6 +30,9 @@ function Parser(){
 	this.errors = [];
 
 	this.currentToken = null;
+	this.hints = [];
+	this.verboseMessages = []
+	this.verbose = verbose;
 
 // public functions
 
@@ -42,28 +48,37 @@ this.parseTokens = function(tokens, done){
 		console.log(this.tree.toString());
 
 		// we made it here therefore we can just return the completed tree
-		done(null, this.tree.toString());
+		done(null, null, this.verboseMessages, this.tree.toString());
 	}else{
 		// process our errors
+		done(this.errors, this.hints, this.verboseMessages, null);
+		console.log(this.verboseMessages);
 		console.log(this.errors);
+		console.log(this.hints);
 	} 
 }
 
 this.parseProgram = function(){
 	// add the root node
 	this.tree.addNode("Program", "branch");
-	console.log("ParseProgram()");
+
+	if(this.verbose){
+		this.verboseMessages.push("ParseProgram()");
+	}
 	this.parseBlock();
 	this.kick();
 }
 
 this.parseBlock = function(){
-	console.log("ParseBlock()");
+	if(this.verbose){
+		this.verboseMessages.push("ParseBlock()");
+	}
 
 	// since we're in a recursive mindfuck, we have to do
 	// things like this to bubble out of error case recursions
 	if(this.errors.length > 0){
-		console.log(this.errors);
+		// preexisting error case, used to bubble our of recursion
+
 	}else{
 		this.tree.addNode("Block", "branch")
 
@@ -79,22 +94,35 @@ this.parseBlock = function(){
 			if(this.currentToken.type == "t_closeBrace"){
 				this.match(this.currentToken);
 			}else{
-				this.errors.push("Error on line " + this.currentToken.linenumber 
-				+ ", expecting close bracket \"}\" character."
-				+ " Hint: did you forget a \"}\" character?");
+				// THIS IS A 'SMART' HINT :D
+				if(this.currentToken.tokenValue == "="){
+					 this.errors.push("Error on line " + this.currentToken.linenumber 
+						+ ". Found \"" + this.currentToken.tokenValue +
+						"\", expecting close bracket \"}\" character.");
+					 
+					 this.hints.push("Hint: Assignment Statements must be seperate from Variable Declarations."
+						+ " Ex. int a a = 6");
+
+				}else{
+					this.errors.push("Error on line " + this.currentToken.linenumber 
+					+ ". Found \""+ this.currentToken.tokenValue +
+					"\", expecting close bracket \"}\" character.");
+				}
 			}
 		}else{
 			//ERROR CASE
 			this.errors.push("Error on line " + this.currentToken.linenumber 
-				+ ", expecting open bracket \"{\" character."
-				+ " Hint: Try starting your program with a \"{\" character");
+				+ ". Found " + this.currentToken.tokenValue +", expecting open bracket \"{\" character.");
+
+			this.hints.push("Hint: Try starting your program with a \"{\" character");
 		}
 	}
 }
 
 this.parseStatementList = function(){
-	console.log("ParseStatementList()");
-
+	if(this.verbose){
+		this.verboseMessages.push("ParseStatementList()");
+	}
 
 	if(this.errors.length == 0){
 		this.tree.addNode("StatementList", "branch");	
@@ -119,7 +147,9 @@ this.parseStatementList = function(){
 }
 
 this.parseStatement = function(){
-	console.log("ParseStatement()");
+	if(this.verbose){
+		this.verboseMessages.push("ParseStatement()");
+	}
 
 	if(this.errors.length == 0){
 		this.tree.addNode("Statement", "branch");
@@ -165,7 +195,10 @@ this.parseStatement = function(){
 }
 
 this.parsePrintStatement = function(){
-	console.log("ParsePrintStatement()");
+	if(this.verbose){
+		this.verboseMessages.push("ParsePrintStatement()");
+	}
+
 	if(this.errors.length == 0){
 		
 		this.tree.addNode("PrintStatement", "branch");
@@ -190,8 +223,9 @@ this.parsePrintStatement = function(){
 					this.errors.push("Error on line " +
 						this.currentToken.linenumber +
 						". Found " + this.currentToken.tokenValue +
-						" Expecting \")\" after print expr." +
-						" Hint: a print statement looks like print(expr)");
+						" Expecting \")\" after print expr.");
+
+					this.hints.push("Hint: a print statement looks like print(expr)");
 				}
 			}else{
 				// error, missing ( after print
@@ -209,7 +243,9 @@ this.parsePrintStatement = function(){
 }
 
 this.parseAssignmentStatement = function(){
-	console.log("parseAssignmentStatement()");
+	if(this.verbose){
+		this.verboseMessages.push("parseAssignmentStatement()");
+	}
 
 	if(this.errors.length == 0){
 		this.tree.addNode("AssignmentStatement", "branch");
@@ -240,7 +276,9 @@ this.parseAssignmentStatement = function(){
 }
 
 this.parseVarDecl = function(){
-	console.log("parseVarDecl()");
+	if(this.verbose){
+		this.verboseMessages.push("parseVarDecl()");
+	}
 
 	if(this.errors.length == 0){
 		this.tree.addNode("VarDecl", "branch");
@@ -258,7 +296,9 @@ this.parseVarDecl = function(){
 			this.errors.push("Error on line" + 
 				this.currentToken.linenumber +
 				". Found " + this.currentToken.tokenValue +
-				" Expecting Variable ID. Hint: An ID is only one character, lowercase [a-z]");
+				" Expecting Variable ID.");
+
+			this.hints.push(" Hint: An ID is only one character, lowercase [a-z]");
 		}
 	}else{
 		// preexisting error case, bubble out of recursion	
@@ -266,7 +306,9 @@ this.parseVarDecl = function(){
 }
 
 this.parseWhileStatement = function(){
-	console.log("parseWhileStatement()");
+	if(this.verbose){
+		this.verboseMessages.push("parseWhileStatement()");
+	}
 
 	if(this.errors.length == 0){
 		this.tree.addNode("WhileStatement", "branch");
@@ -284,7 +326,9 @@ this.parseWhileStatement = function(){
 }
 
 this.parseIfStatement = function(){
-	console.log("parseIfStatement()");
+	if(this.verbose){
+		this.verboseMessages.push("parseIfStatement()");
+	}
 
 	if(this.errors.length == 0){
 		this.tree.addNode("IfStatement", "branch");
@@ -302,7 +346,10 @@ this.parseIfStatement = function(){
 }
 
 this.parseExpr = function(){
-	console.log("parseExpr()");
+	if(this.verbose){
+		this.verboseMessages.push("parseExpr()");
+	}
+
 	this.currentToken = this.getNext();
 	
 	if(this.errors.length == 0){
@@ -331,7 +378,9 @@ this.parseExpr = function(){
 }
 
 this.parseIntExpr = function(){
-	console.log("parseIntExpr()");
+	if(this.verbose){
+		this.verboseMessages.push("parseIntExpr()");
+	}
 
 	if(this.errors.length == 0){
 		this.tree.addNode("IntExpr", "branch");
@@ -356,7 +405,9 @@ this.parseIntExpr = function(){
 }
 
 this.parseStringExpr = function(){
-	console.log("parseStringExpr()")
+	if(this.verbose){
+		this.verboseMessages.push("parseStringExpr()");
+	}
 	
 	if(this.errors.length == 0){
 		this.tree.addNode("StringExpr", "branch");
@@ -374,7 +425,9 @@ this.parseStringExpr = function(){
 			this.errors.push("Error on line " + 
 				this.currentToken.linenumber + 
 				". Found " + this.currentToken.tokenValue +
-				" Expecting end of string \" character. Hint: \"xyz\" is a string.");	
+				" Expecting end of string \" character.");
+
+			this.hints.push("Hint: \"xyz\" is a string.");	
 		}
 	}else{
 		// preexisting error case, bubble out of recursion	
@@ -382,7 +435,10 @@ this.parseStringExpr = function(){
 }
 
 this.parseBooleanExpr = function(){
-	console.log("parseBooleanExpr()");
+	if(this.verbose){
+		this.verboseMessages.push("parseBooleanExpr()");
+	}
+
 	if(this.errors.length == 0){
 		this.tree.addNode("BooleanExpr", "branch");
 
@@ -414,8 +470,6 @@ this.parseBooleanExpr = function(){
 					". Found " + this.currentToken.tokenValue +
 					" Expecting \")\" character. Hint: BooleanExpr looks like (Expr boolop Expr)");
 			}
-
-
 		}else{
 			// error, expecting +
 			this.errors.push("Error on line " + 
@@ -429,7 +483,9 @@ this.parseBooleanExpr = function(){
 }
 
 this.parseId = function(){
-	console.log("parseId()")
+	if(this.verbose){
+		this.verboseMessages.push("parseId()");
+	}
 	
 	if(this.errors.length == 0){
 		this.tree.addNode("Id", "branch");
@@ -451,6 +507,10 @@ this.parseId = function(){
 }
 
 this.parseCharList = function(){
+	if(this.verbose){
+		this.verboseMessages.push("parseCharList()");
+	}
+
 	if(this.errors.length == 0){
 		this.currentToken = this.getNext();
 		console.log("in charlist: ", this.currentToken);		

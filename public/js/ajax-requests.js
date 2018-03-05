@@ -9,7 +9,8 @@ function compile(theUrl, theData, callback){
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.onreadystatechange = function() { 
         if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
-            callback(xmlHttp.responseText);
+            // send the parsed JSON array back to the callback
+            callback(JSON.parse(xmlHttp.responseText));
     }
     xmlHttp.open("POST", theUrl, true); // true for asynchronous 
     xmlHttp.send(JSON.stringify(theData));

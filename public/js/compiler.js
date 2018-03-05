@@ -38,12 +38,13 @@ $(document).ready(function(){
 		function sendCompileRequest(){
 			if(!compileErrors){
 				//send request to compile (found in ajax-requests.js)
-				compile("/compile", tokens, function(err){
-					// do something after compiling, like display data
-					// or give errors 
-					if(err){
-						console.log("ERROR!!!========\\n", err);
-					}
+				compile("/compile", tokens, function(compileResults){
+					var errors = compileResults[0];
+					var hints = compileResults[1];
+					var verboseMessages = compileResults[2];
+					var parseTree = compileResults[3];
+
+					printParserToConsole(errors, hints, verboseMessages, parseTree);
 				});
 			}
 			else{
@@ -135,6 +136,16 @@ $(document).ready(function(){
 	}
 }); //end document.ready
 
+
+function printParserToConsole(errors, hints, verboseMessages, parseTree){
+	$('#consoleInfo').append("<div class=\"alert alert-info\">"+verboseMessages+"</div>");
+	if(errors){
+		$('#consoleInfo').append("<div class=\"alert alert-danger\">"+errors[0]+"</div>");
+		$('#consoleInfo').append("<div class=\"alert alert-warning\">"+hints[0]+"</div>");
+	}else{
+		$('#consoleInfo').append("<div class=\"alert alert-info\">"+parseTree+"</div>");
+	}
+}
 
 //prints the output to the console
 function printToConsole(programNumber, tokens, warnings, errors){
