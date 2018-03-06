@@ -200,10 +200,10 @@ this.parsePrintStatement = function(){
 	}
 
 	if(this.errors.length == 0){
-		
 		this.tree.addNode("PrintStatement", "branch");
 
-		if(this.nextToken.type == "t_print"){
+		this.nextToken = this.getNext();
+		if(this.nextToken && this.nextToken.type == "t_print"){
 			// match PRINT
 			this.match(this.nextToken);
 			this.nextToken = this.getNext();
