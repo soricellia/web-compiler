@@ -28,8 +28,6 @@ $(document).ready(function(){
 			}
 		}
 
-		// TODO: POSSIBLE FIX
-		//we have to change the codemirror style via jquery
 		$('.CodeMirror-gutters').css('background', '#e9ebee');
 
 		// EVENT HANDLERS 
@@ -44,7 +42,9 @@ $(document).ready(function(){
 					var verboseMessages = compileResults[2];
 					var parseTree = compileResults[3];
 
-					printParserToConsole(errors, hints, verboseMessages, parseTree);
+					$('#consoleInfo').append("<br />");
+					var programNumber = 1;
+					printParserToConsole(programNumber, errors, hints, verboseMessages, parseTree);
 				});
 			}
 			else{
@@ -104,6 +104,9 @@ $(document).ready(function(){
 		// editor on change event handler
 		// CALLS LEXER
 		editor.on('change', function(codeEditor){
+			
+			compileErrors = false; // reset compile error flag
+
 			var programs = codeEditor.getValue();
 			programs = programs.split('$');
 
@@ -117,7 +120,12 @@ $(document).ready(function(){
 				if(programs[i]){
 					// call to lexer.js generate tokens function
 					generateTokens(programs[i], function(tokens, warnings, lexErrors){
-						
+						// dont allow compile requests if we have errors
+						if(lexErrors.length > 0){
+							compileErrors = true;
+
+						}
+
 						// lets store our current tokens
 						this.tokens = tokens;
 
@@ -137,14 +145,44 @@ $(document).ready(function(){
 }); //end document.ready
 
 
-function printParserToConsole(errors, hints, verboseMessages, parseTree){
-	$('#consoleInfo').append("<div class=\"alert alert-info\">"+verboseMessages+"</div>");
+function printParserToConsole(programNumber, errors, hints, verboseMessages, parseTree){
+	//print program counter
+	$('#consoleInfo').append('<h3 class="alert alert-info">Parsing program: '+ programNumber + '</h3>');
+
+	//print verbose messages
+	var i;
+	var output = "";
+	for(i = 0; i < verboseMessages.length ; i++){
+		$('#consoleInfo').append("<div class=\"alert alert-info\">"
+			+ verboseMessages[i] +"</div>"); 	
+	}
+
+	//print errors and hints	
 	if(errors){
+		$('#consoleInfo').append('<br /> <div class="alert alert-warning"> Ommiting Parse Tree from program ' +programNumber + ' because Parse Errors Found</div>');
 		$('#consoleInfo').append("<div class=\"alert alert-danger\">"+errors[0]+"</div>");
 		$('#consoleInfo').append("<div class=\"alert alert-warning\">"+hints[0]+"</div>");
-	}else{
-		$('#consoleInfo').append("<div class=\"alert alert-info\">"+parseTree+"</div>");
 	}
+
+	// print tree
+	else{
+		// newlines wont show up in HTML
+		// so we have to do a split on newlines
+		var tree = parseTree.split("\n");
+
+		// also, since the tree has html like tags
+		// we have to be careful with how we add them to the DOM
+
+		$('#consoleInfo').append('<br /> <h3 class="alert alert-info"> Printing Parse Tree');
+		for(i = 0; i < tree.length ; i++){
+			$('#consoleInfo').append("<div class=\"alert alert-success\" id=\"parseTree" + i + "\"></div>");
+			$('#parseTree' + i).text(tree[i]); 	
+		}
+		$('#consoleInfo').append('<br /> <h3 class="alert alert-success">Program ' + programNumber + ' Parsed Successfully');
+
+	}
+
+	$('#consoleContent')[0].scrollTop = $('#consoleContent')[0].scrollHeight;
 }
 
 //prints the output to the console
@@ -164,17 +202,18 @@ function printToConsole(programNumber, tokens, warnings, errors){
 	if(errors.length !== 0){
 		output = "";
 		compileErrors = true; // cant compile
+		
 		for(i = 0; i < errors.length; i++){
 			output += "<div class=\"alert alert-danger\">" + errors[i] + "</div>";
+		
 		}
 
 		$('#consoleInfo').append(output);
 		$('#consoleInfo').append('<h4 class=\"alert alert-danger\">Program ' +programNumber+' Lexed With '+errors.length+' errors.</h4>')
 
 	}else{
-		compileErrors = false // we can compile
-
 		$('#consoleInfo').append('<h4 class=\"alert alert-success\">Program ' +programNumber+' Lexed successfully.</h4>');
+	
 	}
 
 	// PRINT OUR WARNINGS
