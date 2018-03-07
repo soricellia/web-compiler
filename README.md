@@ -1,16 +1,28 @@
 # Web Compiler
+## A note to the Professor
+
+There are 2 things I wanted to bring up before you grade my project, so things are less confusing
+
+1) The console on my GUI is pretty small, and im working on making it expand to full-screen. However, when youre grading this, it might be annoying to look at a CST with the small console. I added a log to the terminal you can view on a successful parse, so you can view the CST a little easier for now. You can still see the output in my GUI, and this is temporary until I can expand my console toolbar. Youll see what I mean.    
+
+2) This one is actually really annoying! Because of how im sending information to and from my backend, sometimes youll notice while compiling multiple programs that some of the programs are coming back to the front end in the WRONG ORDER. this means i lex fine, but youll notice some programs in the wrong order on parse. I have a fix in the works, but its commented out and its 4am and my eyes are bleeding. terribly sorry. I tried to make this easy. Enjoy!
+
+Happy Snow Day
+
 ## Stack information
 
 Currently, my stack is set up as follows:
 
 Font End:
-* CodeMirror (jquery pluggin, used for text editor)
-* bootstrap 
+* HTML5, CSS
 * jquery/javascript
+* bootstrap 
+* CodeMirror (jquery pluggin, used for text editor)
 
 Back End:
 
 * nodejs
+* EJS templates
 
 ## Getting Started
 
