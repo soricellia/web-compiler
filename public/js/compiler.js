@@ -8,10 +8,8 @@
 
 var editor = false; // used to init codemirror for the first time
 
-//make sure we dont send programs with lex errors to compile
-var compileErrors = false; 
-
 var tokens = {}; 
+var programs = [];
 
 $(document).ready(function(){
 	try{
@@ -34,34 +32,51 @@ $(document).ready(function(){
 
 		// compile onclick event handler
 		function sendCompileRequest(){
-			if(!compileErrors){
-				//send request to compile (found in ajax-requests.js)
-				compile("/compile", tokens, function(compileResults){
-					var errors = compileResults[0];
-					var hints = compileResults[1];
-					var verboseMessages = compileResults[2];
-					var parseTree = compileResults[3];
-
-					$('#consoleInfo').append("<br />");
-					var programNumber = 1;
-					printParserToConsole(programNumber, errors, hints, verboseMessages, parseTree);
-				});
-			}
-			else{
-				// we have compile errors, so lets print them for the user
-				var i;
-				var printErrors = ""; 
-				for(i = 0; i < errors.length; i++){
-					printErrors = '\n'
-								  +printErrors
-								  +errors[i].toString();
-					
+			var i;
+			var orderedPrograms = []; // this is getting annoying...
+			for(i = 0 ; i < programs.length ; i++){
+				// some interesting things happen when we wait for the ajax request.
+				// the for loop will actually increment i before compile can give a 
+				// response. therefore, we store the program number as a seperate
+				// variable
+				console.log("program: "+i, programs[i])
+				if(programs[i]){
+					//send request to compile (found in ajax-requests.js)
+					compile("/compile", programs[i], i, function(programNum, compileResults){
+						//orderedPrograms.splice(programNum, 0, compileResults);
+						console.log(orderedPrograms);
+						var errors = compileResults[0];
+						var hints = compileResults[1];
+						var verboseMessages = compileResults[2];
+						var parseTree = compileResults[3];
+						orderedPrograms.splice(programNum, compileResults);
+						$('#consoleInfo').append("<br />");
+						printParserToConsole(programNum +1, errors, hints, verboseMessages, parseTree);
+						
+					});
 				}
-				// display the errors in an alert box
-				alert("You have errors that need to be fixed before you can compile:"
-					  + '\n'
-					  + printErrors);
+				// this means we have a bad lex, so we do nothing it with
+				else{
+					$('#consoleInfo').append("<br />");
+					printParserToConsole(i+1,null, null, ["Failed to Lex -- Ignoring Program " + (i+1)], null);
+
+				}
 			}
+
+			// console.log("orderedPrograms", orderedPrograms);
+			// for(i = 0; i < orderedPrograms.length ; i++){
+			// 	console.log(orderedPrograms[i][0]);
+			// 	console.log("i", i);
+			// 	var errors = orderedPrograms[i][0];
+			// 	var hints = orderedPrograms[i][1];
+			// 	var verboseMessages = orderedPrograms[i][2];
+			// 	var parseTree = orderedPrograms[i][3];
+			// 	$('#consoleInfo').append("<br />");
+			// 	printParserToConsole(i+1, errors, hints, verboseMessages, parseTree);
+
+
+			// }
+
 		}
 
 		
@@ -104,10 +119,9 @@ $(document).ready(function(){
 		// editor on change event handler
 		// CALLS LEXER
 		editor.on('change', function(codeEditor){
-			
-			compileErrors = false; // reset compile error flag
+			this.programs = []; // reset global programs
 
-			var programs = codeEditor.getValue();
+			var programs = codeEditor.getValue(); // local programs
 			programs = programs.split('$');
 
 			//reset the console
@@ -120,17 +134,23 @@ $(document).ready(function(){
 				if(programs[i]){
 					// call to lexer.js generate tokens function
 					generateTokens(programs[i], function(tokens, warnings, lexErrors){
-						// dont allow compile requests if we have errors
-						if(lexErrors.length > 0){
-							compileErrors = true;
-
-						}
-
 						// lets store our current tokens
 						this.tokens = tokens;
+	
+						// dont allow compile requests if we have errors
+						if(lexErrors.length > 0){
+							this.programs.push(false);
+	
+						}else{
+							this.programs.push(this.tokens); // add to global programs
+							console.log(this.programs);
+						}
 
-						if(i != 0) $('#consoleInfo').append('<br />');
-						
+						// for pretty output, space it
+						if(i != 0){
+							$('#consoleInfo').append('<br />');
+
+						}
 						$('#consoleInfo').append('<h3 class="alert alert-info">Lexing program: '+(i+1)+'</h3>');
 						
 						// print output to the console
@@ -157,11 +177,19 @@ function printParserToConsole(programNumber, errors, hints, verboseMessages, par
 			+ verboseMessages[i] +"</div>"); 	
 	}
 
+	$('#consoleInfo').append("<br />");
+
 	//print errors and hints	
-	if(errors){
-		$('#consoleInfo').append('<br /> <div class="alert alert-warning"> Ommiting Parse Tree from program ' +programNumber + ' because Parse Errors Found</div>');
+	if( errors && errors.length > 0){
 		$('#consoleInfo').append("<div class=\"alert alert-danger\">"+errors[0]+"</div>");
-		$('#consoleInfo').append("<div class=\"alert alert-warning\">"+hints[0]+"</div>");
+		
+		if(hints && hints.length > 0){
+			$('#consoleInfo').append("<div class=\"alert alert-warning\">"+hints[0]+"</div>");
+		
+		}
+
+		$('#consoleInfo').append('<div class="alert alert-warning"> Ommiting CST from program ' +programNumber + ' because Errors Found</div>');
+		
 	}
 
 	// print tree
@@ -173,12 +201,17 @@ function printParserToConsole(programNumber, errors, hints, verboseMessages, par
 		// also, since the tree has html like tags
 		// we have to be careful with how we add them to the DOM
 
-		$('#consoleInfo').append('<br /> <h3 class="alert alert-info"> Printing Parse Tree');
-		for(i = 0; i < tree.length ; i++){
-			$('#consoleInfo').append("<div class=\"alert alert-success\" id=\"parseTree" + i + "\"></div>");
-			$('#parseTree' + i).text(tree[i]); 	
+		$('#consoleInfo').append('<h3 class="alert alert-info"> Printing CST for program ' + programNumber);
+		for(i = 0; i < tree.length -1; i++){
+
+			// we are using (i+programNumber*10000) to make sure we create a unique ID element on the DOM.
+			// we have to do this to add elements to the console
+			// this is because we're adding elements to the console that LOOK like html, because of how the tree is represented
+			// so, in order to uniquely style these elements, we had to do this hacky approach... owch!
+			$('#consoleInfo').append("<div class=\"alert alert-success\" id=\"parseTree" + (i+programNumber*10000) + "\"></div>");
+			$('#parseTree' + (i+programNumber*10000)).text(tree[i]); 	
 		}
-		$('#consoleInfo').append('<br /> <h3 class="alert alert-success">Program ' + programNumber + ' Parsed Successfully');
+		$('#consoleInfo').append('<h3 class="alert alert-success">Program ' + programNumber + ' Parsed Successfully');
 
 	}
 
@@ -201,7 +234,6 @@ function printToConsole(programNumber, tokens, warnings, errors){
 	// PRINT OUR ERRORS
 	if(errors.length !== 0){
 		output = "";
-		compileErrors = true; // cant compile
 		
 		for(i = 0; i < errors.length; i++){
 			output += "<div class=\"alert alert-danger\">" + errors[i] + "</div>";

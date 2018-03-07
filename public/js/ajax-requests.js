@@ -5,12 +5,12 @@
 ***************************************************************/
 
 // COMPILE REQUEST
-function compile(theUrl, theData, callback){
+function compile(theUrl, theData, programNum, callback){
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.onreadystatechange = function() { 
         if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
             // send the parsed JSON array back to the callback
-            callback(JSON.parse(xmlHttp.responseText));
+            callback(programNum, JSON.parse(xmlHttp.responseText));
     }
     xmlHttp.open("POST", theUrl, true); // true for asynchronous 
     xmlHttp.send(JSON.stringify(theData));

@@ -45,16 +45,16 @@ this.parseTokens = function(tokens, done){
 	this.parseProgram();
 
 	if(!this.errors.length > 0){
-		console.log(this.tree.toString());
-
 		// we made it here therefore we can just return the completed tree
 		done(null, null, this.verboseMessages, this.tree.toString());
-	}else{
+		
+		// this is for ease of grading
+		console.log(this.tree.toString());
+	}
+	else{
 		// process our errors
 		done(this.errors, this.hints, this.verboseMessages, null);
-		console.log(this.verboseMessages);
-		console.log(this.errors);
-		console.log(this.hints);
+
 	} 
 }
 
@@ -67,6 +67,15 @@ this.parseProgram = function(){
 	}
 	this.parseBlock();
 	this.kick();
+
+	var notDone = this.getNext();
+
+	//if we're not done processing tokens and we dont already have errors
+	// this means there is still more code, but there shouldnt be
+	if(notDone && this.errors.length == 0){
+		this.errors.push("Error on line " + notDone.linenumber + ". Expecting End of Program (EOP) marker \$, found " + notDone.tokenValue);
+		this.hints.push("Hint: A valid program looks like { Statement }\$ -- Note the EOP marker.")
+	}
 }
 
 this.parseBlock = function(){
@@ -107,6 +116,10 @@ this.parseBlock = function(){
 					this.errors.push("Error on line " + this.currentToken.linenumber 
 					+ ". Found \""+ this.currentToken.tokenValue +
 					"\", expecting close bracket \"}\" character.");
+					if(this.currentToken.tokenValue == "+"){
+						this.hints.push("Hint: an IntExpr look like digit + Expr."
+							+ "<br /> Ex. int a = 7 + a is valid <br />  &nbsp;&nbsp;&nbsp; int a = a + 7 is not valid");
+					}
 				}
 			}
 		}else{
@@ -219,13 +232,24 @@ this.parsePrintStatement = function(){
 					// match )
 					this.match(this.nextToken);
 				}else{
-					// error, missing ) after printexpr
+					// ERROR, missing ) after printexpr
+
 					this.errors.push("Error on line " +
 						this.currentToken.linenumber +
 						". Found " + this.currentToken.tokenValue +
 						" Expecting \")\" after print expr.");
 
-					this.hints.push("Hint: a print statement looks like print(expr)");
+					//smart hint detection
+					if(this.currentToken.type == "t_char"){
+						this.hints.push("Hint: an a print statement looks like print(Expr)."
+							+ "<br /> Ex. print(7 + a) is valid <br />  &nbsp;&nbsp;&nbsp; print(a + 7) is not valid");
+					
+					}
+					else{
+						this.hints.push("Hint: a print statement looks like print(Expr)");
+					
+					}
+
 				}
 			}else{
 				// error, missing ( after print
@@ -233,6 +257,7 @@ this.parsePrintStatement = function(){
 					this.currentToken.linenumber +
 					". Found "+ this.currentToken.tokenValue + 
 					" Expecting \"(\" after print statement");
+				
 			}
 		}else{
 			this.errors.push("Error expecting print statement");
@@ -414,7 +439,6 @@ this.parseStringExpr = function(){
 		
 		// match " 
 		this.match(this.currentToken);
-		console.log("before charList", this.currentToken);
 		this.parseCharList();
 
 		this.currentToken = this.getNext();
@@ -513,12 +537,9 @@ this.parseCharList = function(){
 
 	if(this.errors.length == 0){
 		this.currentToken = this.getNext();
-		console.log("in charlist: ", this.currentToken);		
 		if(this.currentToken.type == "t_char"){
 			// match char
 			this.match(this.currentToken);
-
-			console.log("in charlist: ", this.currentToken);
 			this.parseCharList();
 		}else{
 			// I DONT CARE ABOUT SPACES SO, 
