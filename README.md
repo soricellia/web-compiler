@@ -12,6 +12,7 @@ There are a few things I wanted to bring up before you grade my project, so thin
 
 4) parser programs and test cases are under "Parser Programs" in the GUI
 
+5) I broke my line numbers somewhere between project 1 and 2. Im not really sure when. This will have to be a spring break TODO.
 
 Happy Snow Day
 
