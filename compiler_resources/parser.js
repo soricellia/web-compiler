@@ -33,7 +33,7 @@ function Parser(verbose){
 	this.hints = [];
 	this.verboseMessages = []
 	this.verbose = verbose;
-
+	this.symbolTable = [];
 // public functions
 
 // called to init the parse program
@@ -50,6 +50,7 @@ this.parseTokens = function(tokens, done){
 		
 		// this is for ease of grading
 		console.log(this.tree.toString());
+		console.log("Symbol Table wannbe thingy", this.symbolTable);
 	}
 	else{
 		// process our errors
@@ -308,6 +309,9 @@ this.parseVarDecl = function(){
 	if(this.errors.length == 0){
 		this.tree.addNode("VarDecl", "branch");
 
+		// used for symbol table stuff
+		var scopeMan =  this.getNext().tokenValue;
+		
 		//match type
 		this.match(this.currentToken);
 
@@ -315,6 +319,11 @@ this.parseVarDecl = function(){
 
 		if(this.currentToken.type == "t_char"){
 			this.parseId();
+
+			// add the type and ID to the symbol table 
+			scopeMan = scopeMan + ' ' + this.currentToken.tokenValue;
+			this.symbolTable.push(scopeMan);
+
 			this.kick();
 		}else{
 			// error, expecting id
