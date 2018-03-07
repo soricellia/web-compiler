@@ -10,7 +10,7 @@ var re_openBrace   = /\{/;
 var re_closeParen    = /\)/;
 var re_openParen   = /\(/;
 var re_char			= /[a-z]/;
-var re_didgit       = /\d/;
+var re_digit       = /\d/;
 var re_assignment   = /\=/;
 var re_intop		= /\+/
 var re_string		= /\"/;
@@ -273,7 +273,7 @@ function findNextLongestMatch(input, callback){
 					longestToken.type = "ERROR";
 				}
 				else if(longestToken.tokenValue == '='){
-					longestToken.type = "assignment";
+					longestToken.type = "t_assignment";
 				}
 				else{
 					longestToken.type = "t_char";
@@ -334,8 +334,8 @@ function convertToToken(input, lineNumber){
 	else if(re_closeParen.test(input)){
 		return new Token("t_closeParen", input, lineNumber);
 	}
-	else if(re_didgit.test(input)){
-		return new Token("t_didgit", input, lineNumber);
+	else if(re_digit.test(input)){
+		return new Token("t_digit", input, lineNumber);
 	}
 	else if(re_intop.test(input)){
 		return new Token("t_intop", input, lineNumber);

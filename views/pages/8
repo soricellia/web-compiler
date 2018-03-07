@@ -1,0 +1,14 @@
+{"$"}$
+{int b}$
+lex error!$
+{
+	string b
+	b = "abc"
+	b = 6
+	{
+		b = "inablock"
+		int a
+		print(b)
+	}
+	print(a)
+}

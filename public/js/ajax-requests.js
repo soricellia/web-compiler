@@ -5,15 +5,15 @@
 ***************************************************************/
 
 // COMPILE REQUEST
-function compile(theUrl, theData, callback){
-	console.log("here");
+function compile(theUrl, theData, programNum, callback){
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.onreadystatechange = function() { 
         if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
-            callback(xmlHttp.responseText);
+            // send the parsed JSON array back to the callback
+            callback(programNum, JSON.parse(xmlHttp.responseText));
     }
     xmlHttp.open("POST", theUrl, true); // true for asynchronous 
-    xmlHttp.send(theData);
+    xmlHttp.send(JSON.stringify(theData));
 }
 
 // GET A NEW PROGRAM
