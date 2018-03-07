@@ -1,8 +1,6 @@
 {
-	int a = 6
-}$
-
-{
-	int a
-	a = 6
-}$
+  int a
+  int b
+  string c
+  boolean d
+}

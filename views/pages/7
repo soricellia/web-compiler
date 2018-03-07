@@ -1,1 +1,14 @@
-{inta}${intb}${intc}${intd}$
+{
+	int a
+	a = 6
+	string b
+	b = "testing is fun"
+	if(a!=b){
+		boolean c
+		c = (1 != 2)
+		while(a!=c){
+			print(a)
+			a = (a == 6) /* this should be true */
+		}
+	}
+}
