@@ -151,14 +151,24 @@ function findNextLongestMatch(input, callback){
 		
 		// check if this character is a new line
 		if(re_newline.test(nextChar)){
-				lineNumber ++; // increment our line number
+				if(!tokenString){
+					lineNumber ++; // increment our line number
 				
-				longestToken = convertToToken(nextChar, lineNumber);
+					longestToken = convertToToken(nextChar, lineNumber);
 		
-				tokenString = tokenString + nextChar;
-				input = input.substring(1, input.length); //increment our input string
-				matchFound = true;
-		
+					tokenString = tokenString + nextChar;
+					input = input.substring(1, input.length); //increment our input string
+					matchFound = true;
+
+				}
+				else{
+					// if we have something in tokenstring, we have to tokenize that first 
+					longestToken = new Token("t_char", tokenString[0], lineNumber);
+					input = input + tokenString.substring(1, tokenString.length);
+					matchFound = true;
+					
+				}
+
 		}
 
 		// check if this character is a space
@@ -296,15 +306,18 @@ function findNextLongestMatch(input, callback){
 					// add the error to our list of errors
 					errors.push(longestToken);
 				}
+
 				// this means we found a token with a longest match. 
 				// just flag it
 				else{
 					matchFound = true;
 				}
+
 			}
 			//increment our input string
 			input = input.substring(1, input.length);
 		}
+
 		// this means we're in a quote! lets just process the token as a character token and keep it moving
 		else if(nextChar != "\""){
 			//process token into character token
@@ -315,12 +328,15 @@ function findNextLongestMatch(input, callback){
 				if(longestToken.tokenValue == '!'){
 					longestToken.type = "ERROR";
 				}
+
 				else if(longestToken.tokenValue == '='){
 					longestToken.type = "t_assignment";
 				}
+
 				else{
 					longestToken.type = "t_char";
 				}
+
 			}
 
 			//increment our input string
