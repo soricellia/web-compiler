@@ -52,7 +52,10 @@ this.parseTokens = function(tokens, done){
 		console.log(this.tree.toString());
 		console.log("Symbol Table wannbe thingy", this.symbolTable);
 	}
+	
 	else{
+		console.log(this.tree.toString());
+		console.log(this.errors);
 		// process our errors
 		done(this.errors, this.hints, this.verboseMessages, null);
 
@@ -101,8 +104,10 @@ this.parseBlock = function(){
 			this.parseStatementList();
 			this.kick();
 			this.currentToken = this.getNext();
+			
 			if(this.currentToken.type == "t_closeBrace"){
 				this.match(this.currentToken);
+
 			}else{
 				// THIS IS A 'SMART' HINT :D
 				if(this.currentToken.tokenValue == "="){
@@ -152,8 +157,11 @@ this.parseStatementList = function(){
 			this.kick();
 		}else{
 			// LAMBDA PRODUCTION
+		
 		}
+	
 	}else{
+		console.log("i got an error here");
 		// we have errors
 		// since this is an lambda production, the error had to
 		// have came from somewhere else, so do nothing
@@ -294,16 +302,22 @@ this.parseAssignmentStatement = function(){
 					this.currentToken.linenumber +
 					". Found " + this.currentToken.tokenValue +
 					" Expecting \"+\"");
+			
 			}
+		
 		}
+	
 	}else{
 		// preexisting error case, bubble out of recursion	
+	
 	}
+
 }
 
 this.parseVarDecl = function(){
 	if(this.verbose){
 		this.verboseMessages.push("parseVarDecl()");
+	
 	}
 
 	if(this.errors.length == 0){
@@ -325,6 +339,7 @@ this.parseVarDecl = function(){
 			this.symbolTable.push(scopeMan);
 
 			this.kick();
+
 		}else{
 			// error, expecting id
 			this.errors.push("Error on line" + 
@@ -333,15 +348,19 @@ this.parseVarDecl = function(){
 				" Expecting Variable ID.");
 
 			this.hints.push(" Hint: An ID is only one character, lowercase [a-z]");
+		
 		}
+
 	}else{
 		// preexisting error case, bubble out of recursion	
 	}
+
 }
 
 this.parseWhileStatement = function(){
 	if(this.verbose){
 		this.verboseMessages.push("parseWhileStatement()");
+	
 	}
 
 	if(this.errors.length == 0){
@@ -354,10 +373,13 @@ this.parseWhileStatement = function(){
 		this.kick();
 		this.parseBlock();
 		this.kick();
+	
 	}else{
 		// preexisting error case, bubble out of recursion	
+	
 	}	
 }
+
 
 this.parseIfStatement = function(){
 	if(this.verbose){
@@ -526,12 +548,14 @@ this.parseId = function(){
 		if(this.currentToken.type == "t_char"){
 			// match char
 			this.match(this.currentToken);	
+		
 		}else{
 			// error, expecting char
 			this.errors.push("Error on line" + 
 					this.currentToken.linenumber +
 					". Found " + this.currentToken.tokenValue +
 					" Expecting ID. Hint: an ID is a single lowercase character [a-z]");	
+		
 		}
 		
 	}else{
