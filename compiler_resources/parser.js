@@ -82,6 +82,9 @@ this.parseProgram = function(){
 	}
 }
 
+/*
+	Block ::== { StatementList } 
+*/
 this.parseBlock = function(){
 	if(this.verbose){
 		this.verboseMessages.push("ParseBlock()");
@@ -101,14 +104,20 @@ this.parseBlock = function(){
 		if(this.currentToken.type == "t_openBrace"){
 			// match {
 			this.match(this.currentToken);
+			
+
+			this.tree.addNode("StatementList", "branch");
 			this.parseStatementList();
 			this.kick();
+			
 			this.currentToken = this.getNext();
 			
 			if(this.currentToken.type == "t_closeBrace"){
 				this.match(this.currentToken);
 
-			}else{
+			}
+
+			else{
 				// THIS IS A 'SMART' HINT :D
 				if(this.currentToken.tokenValue == "="){
 					 this.errors.push("Error on line " + this.currentToken.linenumber 
@@ -126,7 +135,9 @@ this.parseBlock = function(){
 						this.hints.push("Hint: an IntExpr look like digit + Expr."
 							+ "<br /> Ex. int a = 7 + a is valid <br />  &nbsp;&nbsp;&nbsp; int a = a + 7 is not valid");
 					}
+
 				}
+
 			}
 		}else{
 			//ERROR CASE
@@ -135,17 +146,22 @@ this.parseBlock = function(){
 
 			this.hints.push("Hint: Try starting your program with a \"{\" character");
 		}
+
 	}
+
 }
 
+/*
+	StatementList ::== Statement StatementList
+				  ::== ε
+*/
 this.parseStatementList = function(){
 	if(this.verbose){
 		this.verboseMessages.push("ParseStatementList()");
 	}
 
 	if(this.errors.length == 0){
-		this.tree.addNode("StatementList", "branch");	
-		
+
 		// get our current token
 		this.currentToken = this.getNext(this.tokens);
 	
@@ -154,7 +170,6 @@ this.parseStatementList = function(){
 			this.parseStatement();
 			this.kick();
 			this.parseStatementList();
-			this.kick();
 		}else{
 			// LAMBDA PRODUCTION
 		
@@ -168,6 +183,14 @@ this.parseStatementList = function(){
 	}
 }
 
+/**
+	Statement ::== PrintStatement
+			  ::== AssignmentStatement
+			  ::== VarDecl
+			  ::== WhileStatement
+   			  ::== IfStatement
+			  ::== Block 
+**/
 this.parseStatement = function(){
 	if(this.verbose){
 		this.verboseMessages.push("ParseStatement()");
@@ -203,6 +226,7 @@ this.parseStatement = function(){
 		else if(this.currentToken.type == "t_openBrace"){
 			this.parseBlock();
 			this.kick();
+		
 		}
 
 		else{
@@ -210,12 +234,19 @@ this.parseStatement = function(){
 					this.currentToken.linenumber +
 					". Expecting \"print\", \"int\", \"string\", \"boolean\""
 					+ ", \"variable_name\", \"while\", \"if\" or \"{\".");
+		
 		}
+	
 	}else{
 		// preexisting error case, bubble out of recursion
+	
 	}
+
 }
 
+/*
+	PrintStatement ::== print ( Expr )
+*/
 this.parsePrintStatement = function(){
 	if(this.verbose){
 		this.verboseMessages.push("ParsePrintStatement()");
@@ -276,6 +307,9 @@ this.parsePrintStatement = function(){
 	}
 }
 
+/*
+	AssignmentStatement ::== Id = Expr 
+*/
 this.parseAssignmentStatement = function(){
 	if(this.verbose){
 		this.verboseMessages.push("parseAssignmentStatement()");
@@ -314,6 +348,9 @@ this.parseAssignmentStatement = function(){
 
 }
 
+/*
+	VarDecl ::== type Id 
+*/
 this.parseVarDecl = function(){
 	if(this.verbose){
 		this.verboseMessages.push("parseVarDecl()");
@@ -357,6 +394,9 @@ this.parseVarDecl = function(){
 
 }
 
+/**
+	WhileStatement ::== while BooleanExpr Block 
+*/
 this.parseWhileStatement = function(){
 	if(this.verbose){
 		this.verboseMessages.push("parseWhileStatement()");
@@ -380,7 +420,9 @@ this.parseWhileStatement = function(){
 	}	
 }
 
-
+/*
+	IfStatement ::== if BooleanExpr Block
+*/
 this.parseIfStatement = function(){
 	if(this.verbose){
 		this.verboseMessages.push("parseIfStatement()");
@@ -401,6 +443,12 @@ this.parseIfStatement = function(){
 	}	
 }
 
+/*
+	Expr ::== IntExpr
+		 ::== StringExpr
+		 ::== BooleanExpr
+		 ::== Id 
+*/
 this.parseExpr = function(){
 	if(this.verbose){
 		this.verboseMessages.push("parseExpr()");
@@ -413,26 +461,53 @@ this.parseExpr = function(){
 		if(this.currentToken.type == "t_digit"){
 			this.parseIntExpr();
 			this.kick();
-		}else if(this.currentToken.type == "t_string"){
+
+		}
+
+		else if(this.currentToken.type == "t_string"){
 			this.parseStringExpr();
 			this.kick();
-		}else if(this.currentToken.type == "t_openParen"){
+		
+		}
+
+		else if(this.currentToken.type == "t_openParen"){
 			this.parseBooleanExpr();
 			this.kick();
-		}else if(this.currentToken.type == "t_char"){
+		
+		}
+
+		else if(this.currentToken.type == "t_char"){
 			this.parseId();
 			this.kick();
-		}else{
-			this.errors.push("Error on line "+ this.currentToken.linenumber
-				+ ". Found " + this.currentToken.tokenValue + 
-				" Expecting digit, string character \"\"\" , open paren character \")\" or ID character [a-z]");
+		
+		}
+
+		else if(this.currentToken.type == "t_boolval"){
+			this.parseBooleanExpr();
+			this.kick();
+
+		}
+		else{
+			if(this.errors.length == 0){
+				this.errors.push("Error on line "+ this.currentToken.linenumber
+					+ ". Found " + this.currentToken.tokenValue + 
+					" Expecting digit,  \"\"\", \"(\", boolval or ID character [a-z]");
+			
+			}
+		
 		}
 		
 	}else{
 		// preexisting error case, bubble out of recursion	
+	
 	}	
 }
 
+/**
+	IntExpr ::== digit intop Expr
+			::== digit 
+
+**/
 this.parseIntExpr = function(){
 	if(this.verbose){
 		this.verboseMessages.push("parseIntExpr()");
@@ -460,6 +535,10 @@ this.parseIntExpr = function(){
 	}	
 }
 
+/**
+	StringExpr ::== " CharList " 
+
+**/
 this.parseStringExpr = function(){
 	if(this.verbose){
 		this.verboseMessages.push("parseStringExpr()");
@@ -486,9 +565,15 @@ this.parseStringExpr = function(){
 		}
 	}else{
 		// preexisting error case, bubble out of recursion	
+	
 	}	
 }
 
+/**
+	BooleanExpr ::== ( Expr boolop Expr )
+				::== boolval
+
+**/
 this.parseBooleanExpr = function(){
 	if(this.verbose){
 		this.verboseMessages.push("parseBooleanExpr()");
@@ -498,20 +583,32 @@ this.parseBooleanExpr = function(){
 		this.tree.addNode("BooleanExpr", "branch");
 
 		this.currentToken = this.getNext();
-		// match (
-		this.match(this.currentToken);
 		
-		this.parseExpr();
-		this.kick();
-
-		this.currentToken = this.getNext();
-
-		if(this.currentToken.type == "t_boolop"){
-			// match boolop  
+		// boolop case
+		if(this.currentToken.type == "t_boolval"){
+			// match boolval
 			this.match(this.currentToken);
 
+		}
+		
+		// (expr boolop expr) case
+		else if(this.currentToken.type == "t_openParen"){
+
+			// match (
+			this.match(this.currentToken);
+		
 			this.parseExpr();
 			this.kick();
+
+			this.currentToken = this.getNext();
+
+			if(this.currentToken.type == "t_boolop"){
+				// match boolop  
+				this.match(this.currentToken);
+
+				this.parseExpr();
+				this.kick();
+			}
 
 			this.currentToken = this.getNext();
 
@@ -525,18 +622,25 @@ this.parseBooleanExpr = function(){
 					". Found " + this.currentToken.tokenValue +
 					" Expecting \")\" character. Hint: BooleanExpr looks like (Expr boolop Expr)");
 			}
+
 		}else{
 			// error, expecting +
 			this.errors.push("Error on line " + 
 					this.currentToken.linenumber +
 					". Found " + this.currentToken.tokenValue +
-					" Expecting \"\" character. Hint: BooleanExpr looks like (Expr boolop Expr)");
+					" Expecting \"\" character. Hint: BooleanExpr looks like (Expr boolop Expr) or boolop");
 		}
+	
 	}else{
 		// preexisting error case, bubble out of recursion	
+	
 	}	
+
 }
 
+/*
+	Id ::== char 
+*/
 this.parseId = function(){
 	if(this.verbose){
 		this.verboseMessages.push("parseId()");
@@ -558,14 +662,25 @@ this.parseId = function(){
 		
 		}
 		
-	}else{
+	}
+
+	else{
 		// preexisting error case, bubble out of recursion	
+
 	}	
+
 }
 
+
+/*
+	CharList ::== char CharList
+			 ::== space CharList
+			 ::== ε
+*/
 this.parseCharList = function(){
 	if(this.verbose){
 		this.verboseMessages.push("parseCharList()");
+	
 	}
 
 	if(this.errors.length == 0){
@@ -574,12 +689,19 @@ this.parseCharList = function(){
 			// match char
 			this.match(this.currentToken);
 			this.parseCharList();
-		}else{
+		
+		}
+
+		else{
 			// I DONT CARE ABOUT SPACES SO, 
 			// LAMBDA PRODUCTION
+		
 		}
-	}else{
+	}
+
+	else{
 		// preexisting error case, bubble out of recursion	
+	
 	}	
 }
 
@@ -609,32 +731,3 @@ this.kick = function(){
 }
 
 module.exports = Parser;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
