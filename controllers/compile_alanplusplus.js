@@ -1,4 +1,6 @@
 var Parser = require('../compiler_resources/parser');
+var ASTParser = require('../compiler_resources/ast_parser');
+
 exports.post = function(req, res) {
 	req.on("data", function(data){
 		// data is a json string
@@ -17,11 +19,16 @@ exports.post = function(req, res) {
 			if(programs[i]){
 				parser.parseTokens(programs[i], function(errs, hints, verboseMessages, parseTree){
 					responseMessage[i] = {};
-					responseMessage[i]['errs'] = errs;
-					responseMessage[i]['hints'] = hints;
-					responseMessage[i]['verbose'] = verboseMessages;
-					responseMessage[i]['tree'] = parseTree;
+					responseMessage[i]['parse'] = {}
+					responseMessage[i]['parse']['errs'] = errs;
+					responseMessage[i]['parse']['hints'] = hints;
+					responseMessage[i]['parse']['verbose'] = verboseMessages;
+					responseMessage[i]['parse']['tree'] = parseTree;
 
+					// if there was no errors, go ahead and build an AST
+					if(!responseMessage[i]['parse']['errs']){
+						parseAST(programs[i], responseMessage[i]);
+					}
 					// if we're done parsing the last program
 					// send it back to the front end
 					if((i+1) == programs.length){
@@ -32,11 +39,23 @@ exports.post = function(req, res) {
 				//console.log(responseMessage);
 			}else{
 				responseMessage[i] = {};
-				responseMessage[i]['errs'] = ["Failed to Lex -- Ignoring Program"];
-				responseMessage[i]['hints'] = null;
-				responseMessage[i]['verbose'] = null;
-				responseMessage[i]['tree'] = null;
+				responseMessage[i]['parse'] = {}
+				responseMessage[i]['parse']['errs'] = ["Failed to Lex -- Ignoring Program"];
+				responseMessage[i]['parse']['hints'] = null;
+				responseMessage[i]['parse']['verbose'] = null;
+				responseMessage[i]['parse']['tree'] = null;
 			}
 		}
 	});
 };
+
+function parseAST(tokens, responseMessage){
+	var astParser = new ASTParser(true);
+	astParser.parseTokens(tokens, function(errs, warnings, ast, symbolTable){
+		responseMessage['ast'] = {};
+		responseMessage['ast']['errs'] = errs;
+		responseMessage['ast']['warnings'] = warnings;
+		responseMessage['ast']['tree'] = ast;
+		responseMessage['ast']['symbolTable'] = symbolTable
+	})
+}

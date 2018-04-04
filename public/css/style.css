@@ -30,7 +30,8 @@ a, a:hover, a:focus {
 	position: relative;
     overflow: hidden;
     background: white;
-    height: 50%;
+    height: 30%;
+    margin-right: 15px;
 }
 
 /** 
@@ -110,7 +111,7 @@ a, a:hover, a:focus {
     background: #7386D5;
 	padding-right: 15px;
 	padding-bottom: 15px;
-	height: 35%; 
+	height: 55%; 
     box-shadow: 0px 2px 1px rgba(0, 0, 0, 0.1) inset;
 }
 
@@ -213,8 +214,8 @@ a, a:hover, a:focus {
 }
 
 .nav>li>a:focus, .nav>li>a:hover {
-	color: #fff;
-	background: #6d7fcc;
+	color: #6d7fcc;
+	background: #fff;
 }
 
 a[data-toggle="collapse"] {

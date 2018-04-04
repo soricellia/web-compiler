@@ -1,7 +1,7 @@
 /****************************************************************
-	Parser.js
+	ast_parser.js
 	Input: 
-		Constructor: parser(verbose)
+		Constructor: ASTParser(verbose)
 					-verbose outputs the stack trace made during the 
 					 recursive decent parse
 		parseTokens: parseTokens(tokens, done)
@@ -9,8 +9,11 @@
 					-done is a callback function
 	Purpose:
 		parses list of tokens using alan++ language grammer
+		into a abstract syntax tree. 
+
+		Scope checking and type checking via symbol table is done here
 	output:
-		return(errors, hints, verboseMessages, parseTree)
+		return(errors, warnings, ast, symbolTable)
 ***************************************************************/
 var Tree = require('./tree');
 
@@ -19,7 +22,27 @@ const firstOfStatement = new Set(["t_print", "t_while", "t_if"
 
 const firstOfExpr = new Set(["t_digit", "t_string", "t_openParen", "t_boolval", "t_char"]);
 
-function Parser(verbose){
+
+/**
+	symbol table element definition
+**/
+function SymbolTableElement(name, type, scope, line){
+	this.name  = name;
+	this.type  = type;
+	this.scope = scope;
+	this.line  = line;
+	this.initalized = false;
+}
+SymbolTableElement.prototype.toString = function symbolTableElementToString(){
+		return this.name + "    " 
+			+ this.type + "    " 
+			+ this.scope + "    " 
+			+ this.line + "     "
+			+ this.initalized;
+	}
+ 
+
+function ASTParser(verbose){
 	// the parse tree
 	this.tree = new Tree();
 
@@ -30,11 +53,14 @@ function Parser(verbose){
 	this.errors = [];
 
 	this.currentToken = null;
-	this.hints = [];
-	this.verboseMessages = []
+	this.warnings = [];
 	this.verbose = verbose;
-	this.symbolTable = [];
+	this.charList = "";
 
+	// init the symbol table
+	this.symbolTable = [];
+	this.scope = 0;
+	this.symbolTable[this.scope] = []; // we start on scope 0
 
 /******************
  public functions
@@ -45,23 +71,24 @@ this.parseTokens = function(tokens, done){
 	this.tokens = tokens;
 	this.clearParser();
 
-	// start parsing our grammer
+	// build our AST
 	this.parseProgram();
 
+	// check for errors
 	if(!this.errors.length > 0){
 		// we made it here therefore we can just return the completed tree
-		done(null, null, this.verboseMessages, this.tree.toString());
+		done(null, this.warnings, this.tree.toString(), this.symbolTable);
 		
 		// this is for ease of grading
-		//console.log(this.tree.toString());
-		//console.log("Symbol Table wannbe thingy", this.symbolTable);
+		console.log(this.tree.toString());
+		console.log("Symbol Table", this.symbolTable);
 	}
 	
 	else{
 		console.log(this.tree.toString());
 		console.log(this.errors);
 		// process our errors
-		done(this.errors, this.hints, this.verboseMessages, null);
+		done(this.errors, this.warnings, this.tree.toString(), null);
 
 	} 
 }
@@ -77,23 +104,18 @@ this.clearParser = function(){
 	this.index = 0;
 	this.errors = [];
 	this.currentToken = null;
-	this.hints = [];
-	this.verboseMessages = []
-	this.verbose = verbose;
-	this.symbolTable = [];
+	this.warnings = [];
 
+	// init the symbol table
+	this.symbolTable = [];
+	this.scope = 0;
+	this.symbolTable[this.scope] = []; // we start on scope 0
 }
 
 /*************************
 	starts the parsing sequence 
 **************************/
 this.parseProgram = function(){
-	// add the root node
-	this.tree.addNode("Program", "branch");
-
-	if(this.verbose){
-		this.verboseMessages.push("ParseProgram()");
-	}
 	this.parseBlock();
 	this.kick();
 
@@ -111,10 +133,6 @@ this.parseProgram = function(){
 	Block ::== { StatementList } 
 */
 this.parseBlock = function(){
-	if(this.verbose){
-		this.verboseMessages.push("ParseBlock()");
-	}
-
 	// since we're in a recursive mindfuck, we have to do
 	// things like this to bubble out of error case recursions
 	if(this.errors.length > 0){
@@ -130,14 +148,11 @@ this.parseBlock = function(){
 			// match {
 			this.match(this.currentToken);
 			
-
-			this.tree.addNode("StatementList", "branch");
 			this.parseStatementList();
-			this.kick();
 			
 			this.currentToken = this.getNext();
 			
-			if(this.currentToken.type == "t_closeBrace"){
+		if(this.currentToken.type == "t_closeBrace"){
 				this.match(this.currentToken);
 
 			}
@@ -181,10 +196,6 @@ this.parseBlock = function(){
 				  ::== ε
 */
 this.parseStatementList = function(){
-	if(this.verbose){
-		this.verboseMessages.push("ParseStatementList()");
-	}
-
 	if(this.errors.length == 0){
 
 		// get our current token
@@ -193,7 +204,6 @@ this.parseStatementList = function(){
 		// check if the current token is in fist of statement
 		if(firstOfStatement.has(this.currentToken.type)){
 			this.parseStatement();
-			this.kick();
 			this.parseStatementList();
 		}else{
 			// LAMBDA PRODUCTION
@@ -217,12 +227,7 @@ this.parseStatementList = function(){
 			  ::== Block 
 **/
 this.parseStatement = function(){
-	if(this.verbose){
-		this.verboseMessages.push("ParseStatement()");
-	}
-
 	if(this.errors.length == 0){
-		this.tree.addNode("Statement", "branch");
 		if(this.currentToken.type == "t_print"){
 			this.parsePrintStatement();
 			this.kick();
@@ -249,8 +254,11 @@ this.parseStatement = function(){
 		}
 
 		else if(this.currentToken.type == "t_openBrace"){
+			this.createNewScope();
 			this.parseBlock();
 			this.kick();
+			this.scope--;
+			console.log("symbol table after block", this.symbolTable)
 		
 		}
 
@@ -273,12 +281,8 @@ this.parseStatement = function(){
 	PrintStatement ::== print ( Expr )
 */
 this.parsePrintStatement = function(){
-	if(this.verbose){
-		this.verboseMessages.push("ParsePrintStatement()");
-	}
-
 	if(this.errors.length == 0){
-		this.tree.addNode("PrintStatement", "branch");
+		this.tree.addNode("Print", "branch");
 
 		this.nextToken = this.getNext();
 		if(this.nextToken && this.nextToken.type == "t_print"){
@@ -290,7 +294,6 @@ this.parsePrintStatement = function(){
 				this.match(this.nextToken);
 
 				this.parseExpr();
-				this.kick();
 
 				this.nextToken = this.getNext();
 				if(this.nextToken.type == "t_closeParen"){
@@ -336,15 +339,37 @@ this.parsePrintStatement = function(){
 	AssignmentStatement ::== Id = Expr 
 */
 this.parseAssignmentStatement = function(){
-	if(this.verbose){
-		this.verboseMessages.push("parseAssignmentStatement()");
-	}
-
 	if(this.errors.length == 0){
-		this.tree.addNode("AssignmentStatement", "branch");
+		this.tree.addNode("Assignment Statement", "branch");
 
 		if(this.currentToken.type == "t_char"){
 			// match ID
+			var assignVar = this.currentToken;
+			var i, j;
+			var isDeclared = false;
+
+			//start at the current scope and try to find the variable
+			console.log("st: ", this.symbolTable);
+			console.log("scope: ", this.scope);
+			for(i = this.scope; i >= 0; i--){
+				for(j = 0; j < this.symbolTable[i].length ; j++){
+					console.log("name: ", this.symbolTable[i][j].name);
+					console.log("value: ", assignVar.tokenValue);
+					
+					if(this.symbolTable[i][j].name == assignVar.tokenValue){
+						this.symbolTable[i][j].initalized = true;
+						j = this.symbolTable[i].length;
+						i = 0;
+						isDeclared = true;
+					}
+				}
+			}
+			if(!isDeclared){
+				this.warnings.push("Warning: variable " 
+					+ assignVar.tokenValue + " on line "
+					+ assignVar.linenumber + " is assigned a value but undeclared.");
+			}
+
 			this.match(this.currentToken);
 
 			this.currentToken = this.getNext();
@@ -353,8 +378,7 @@ this.parseAssignmentStatement = function(){
 				// match =
 				this.match(this.currentToken);
 				this.parseExpr();
-				this.kick();
-
+				
 			}else{
 				// error, missing + 
 				this.errors.push("Error on line " +
@@ -377,17 +401,11 @@ this.parseAssignmentStatement = function(){
 	VarDecl ::== type Id 
 */
 this.parseVarDecl = function(){
-	if(this.verbose){
-		this.verboseMessages.push("parseVarDecl()");
-	
-	}
-
 	if(this.errors.length == 0){
-		this.tree.addNode("VarDecl", "branch");
+		this.tree.addNode("Variable Declaration", "branch");
 
-		// used for symbol table stuff
-		var scopeMan =  this.getNext().tokenValue;
-		
+		// create new symbol table element
+		stElement = new SymbolTableElement(null, this.currentToken.tokenValue, this.scope, this.currentToken.linenumber);
 		//match type
 		this.match(this.currentToken);
 
@@ -396,12 +414,11 @@ this.parseVarDecl = function(){
 		if(this.currentToken.type == "t_char"){
 			this.parseId();
 
-			// add the type and ID to the symbol table 
-			scopeMan = scopeMan + ' ' + this.currentToken.tokenValue;
-			this.symbolTable.push(scopeMan);
+			stElement.name = this.currentToken.tokenValue;
+			this.symbolTable[this.scope].push(stElement);
 
-			this.kick();
-
+			console.log(this.scope);
+			console.log(this.symbolTable);
 		}else{
 			// error, expecting id
 			this.errors.push("Error on line" + 
@@ -423,22 +440,21 @@ this.parseVarDecl = function(){
 	WhileStatement ::== while BooleanExpr Block 
 */
 this.parseWhileStatement = function(){
-	if(this.verbose){
-		this.verboseMessages.push("parseWhileStatement()");
-	
-	}
-
 	if(this.errors.length == 0){
-		this.tree.addNode("WhileStatement", "branch");
+		this.tree.addNode("While Statement", "branch");
 
 		// match WHILE
 		this.match(this.currentToken);
 
 		this.parseBooleanExpr();
-		this.kick();
+
+		// new scope
+		this.createNewScope();
 		this.parseBlock();
+
+		// pop scope back
 		this.kick();
-	
+		this.kickScope();	
 	}else{
 		// preexisting error case, bubble out of recursion	
 	
@@ -449,20 +465,20 @@ this.parseWhileStatement = function(){
 	IfStatement ::== if BooleanExpr Block
 */
 this.parseIfStatement = function(){
-	if(this.verbose){
-		this.verboseMessages.push("parseIfStatement()");
-	}
-
 	if(this.errors.length == 0){
-		this.tree.addNode("IfStatement", "branch");
+		this.tree.addNode("If Statement", "branch");
 
 		// match IF
 		this.match(this.currentToken);
 
 		this.parseBooleanExpr();
-		this.kick();
+		
+		// new scope
+		this.createNewScope();
 		this.parseBlock();
+		
 		this.kick();
+		this.kickScope();
 	}else{
 		// preexisting error case, bubble out of recursion	
 	}	
@@ -475,41 +491,30 @@ this.parseIfStatement = function(){
 		 ::== Id 
 */
 this.parseExpr = function(){
-	if(this.verbose){
-		this.verboseMessages.push("parseExpr()");
-	}
-
 	this.currentToken = this.getNext();
 	
 	if(this.errors.length == 0){
-		this.tree.addNode("Expr", "branch");
 		if(this.currentToken.type == "t_digit"){
 			this.parseIntExpr();
-			this.kick();
-
 		}
 
 		else if(this.currentToken.type == "t_string"){
 			this.parseStringExpr();
-			this.kick();
 		
 		}
 
 		else if(this.currentToken.type == "t_openParen"){
 			this.parseBooleanExpr();
-			this.kick();
 		
 		}
 
 		else if(this.currentToken.type == "t_char"){
 			this.parseId();
-			this.kick();
 		
 		}
 
 		else if(this.currentToken.type == "t_boolval"){
 			this.parseBooleanExpr();
-			this.kick();
 
 		}
 		else{
@@ -534,12 +539,12 @@ this.parseExpr = function(){
 
 **/
 this.parseIntExpr = function(){
-	if(this.verbose){
-		this.verboseMessages.push("parseIntExpr()");
-	}
-
 	if(this.errors.length == 0){
-		this.tree.addNode("IntExpr", "branch");
+		// first look ahead one token and see if the next token is an intop
+		if(this.tokens[this.index+1].type == "t_intop"){
+			//the intop is going to be the branch in the AST
+			this.tree.addNode("Add", 'branch');
+		}
 		// match digit
 		this.match(this.currentToken);
 
@@ -551,7 +556,6 @@ this.parseIntExpr = function(){
 
 			this.parseExpr();
 			this.kick();
-
 		}else{
 			// lambda production
 		}
@@ -564,20 +568,18 @@ this.parseIntExpr = function(){
 	StringExpr ::== " CharList " 
 
 **/
-this.parseStringExpr = function(){
-	if(this.verbose){
-		this.verboseMessages.push("parseStringExpr()");
-	}
-	
+this.parseStringExpr = function(){	
 	if(this.errors.length == 0){
-		this.tree.addNode("StringExpr", "branch");
 		
 		// match " 
 		this.match(this.currentToken);
+		
+		this.charList = "";
 		this.parseCharList();
 
 		this.currentToken = this.getNext();
 		if(this.currentToken.type == "t_string"){
+			this.tree.addNode(this.charList);
 			this.match(this.currentToken);
 		}else{
 			// error, expecting end of string "
@@ -600,12 +602,7 @@ this.parseStringExpr = function(){
 
 **/
 this.parseBooleanExpr = function(){
-	if(this.verbose){
-		this.verboseMessages.push("parseBooleanExpr()");
-	}
-
 	if(this.errors.length == 0){
-		this.tree.addNode("BooleanExpr", "branch");
 
 		this.currentToken = this.getNext();
 		
@@ -621,10 +618,19 @@ this.parseBooleanExpr = function(){
 
 			// match (
 			this.match(this.currentToken);
-		
-			this.parseExpr();
-			this.kick();
+			
+			// we look ahead one token to see if the next is a boolop
+			// if it is we want to add it to the tree first
+			if(this.tokens[this.index+1].type == "t_boolop"){
+				if(this.tokens[this.index+1].tokenValue == "=="){
+					this.tree.addNode("Equals", "branch");
+				}else{
+					this.tree.addNode("Not Equals", "branch");
+				}
+			}
 
+			this.parseExpr();
+			
 			this.currentToken = this.getNext();
 
 			if(this.currentToken.type == "t_boolop"){
@@ -632,6 +638,8 @@ this.parseBooleanExpr = function(){
 				this.match(this.currentToken);
 
 				this.parseExpr();
+				
+				// kick back up the boolop 
 				this.kick();
 
 				this.currentToken = this.getNext();
@@ -679,13 +687,8 @@ this.parseBooleanExpr = function(){
 /*
 	Id ::== char 
 */
-this.parseId = function(){
-	if(this.verbose){
-		this.verboseMessages.push("parseId()");
-	}
-	
+this.parseId = function(){	
 	if(this.errors.length == 0){
-		this.tree.addNode("Id", "branch");
 		this.currentToken = this.getNext();
 		if(this.currentToken.type == "t_char"){
 			// match char
@@ -716,16 +719,16 @@ this.parseId = function(){
 			 ::== ε
 */
 this.parseCharList = function(){
-	if(this.verbose){
-		this.verboseMessages.push("parseCharList()");
-	
-	}
-
 	if(this.errors.length == 0){
+		
+
 		this.currentToken = this.getNext();
 		if(this.currentToken.type == "t_char"){
 			// match char
-			this.match(this.currentToken);
+			this.charList += this.currentToken.tokenValue;
+			this.index++;
+			//this.match(this.currentToken);
+			
 			this.parseCharList();
 		
 		}
@@ -756,7 +759,17 @@ this.getNext = function(){
 // increments the token counter 
 // adds the token as a leaf to the tree
 this.match = function(token){
-	this.tree.addNode(token.tokenValue, "leaf");
+	if(token.type != "t_openBrace" && token.type != "t_closeBrace" 
+		&& token.type != "t_openParen" && token.type != "t_closeParen"
+		&& token.type != "t_if" && token.type != "t_print" 
+		&& token.type != "t_while" && token.type != 't_assignment'
+		&& token.type != "t_boolop" && token.type != 't_string'
+		&& token.type != "t_intop")
+	{
+		if(token)
+		this.tree.addNode(token.tokenValue, "leaf");
+	
+	}
 	this.index++;
 }
 
@@ -766,6 +779,16 @@ this.kick = function(){
 	this.tree.endChildren();
 }
 
+
+this.createNewScope = function(){
+	this.scope++;
+	this.symbolTable[this.scope] = [];
 }
 
-module.exports = Parser;
+this.kickScope = function(){
+	this.scope--;
+	//this.symbolTable[this.scope] = []
+}
+
+}
+module.exports = ASTParser;

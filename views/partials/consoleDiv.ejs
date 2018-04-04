@@ -3,14 +3,16 @@
     <div class="container-fluid">
         <ul class="nav navbar-nav">
             <li>
-                <a href="#" class="consoleTab selected" onclick="switchTab(event, 'lex')">Lex</a>
-
+                <a href="#" class="consoleTab selected" style="border-top-left-radius:10px" onclick="switchTab(event, 'lex')">Lex</a>
             </li>
             <li>
                 <a href="#" class="consoleTab" onclick="switchTab(event, 'parse')">Parse</a>
             </li>
             <li>
                 <a href="#" class="consoleTab" onclick="switchTab(event, 'ast')">AST</a>
+            </li>
+            <li>
+                <a href="#" class="consoleTab" style="border-top-right-radius:10px" onclick="switchTab(event, 'codeGen')">Code Gen</a>
             </li>
         </ul>
     </div>
