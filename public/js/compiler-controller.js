@@ -47,10 +47,10 @@ $(document).ready(function(){
 				for(i = 0 ; i < compileResults.length ; i++){
 					// print each result
 					printParseToConsole(i+1, 
-						compileResults[i]['errs'], 
-						compileResults[i]['hints'], 
-						compileResults[i]['verbose'], 
-						compileResults[i]['tree']);
+						compileResults[i]['parse']['errs'], 
+						compileResults[i]['parse']['hints'], 
+						compileResults[i]['parse']['verbose'], 
+						compileResults[i]['parse']['tree']);
 				}
 			});
 		}

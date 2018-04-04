@@ -31,7 +31,7 @@ a, a:hover, a:focus {
     overflow: hidden;
     background: white;
     height: 30%;
-    padding-right: 5px;
+    margin-right: 15px;
 }
 
 /** 
