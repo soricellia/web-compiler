@@ -34,7 +34,7 @@ function ASTParser(verbose){
 	this.verboseMessages = []
 	this.verbose = verbose;
 	this.symbolTable = [];
-
+	this.charList = "";
 
 /******************
  public functions
@@ -518,10 +518,13 @@ this.parseStringExpr = function(){
 		
 		// match " 
 		this.match(this.currentToken);
+		
+		this.charList = "";
 		this.parseCharList();
 
 		this.currentToken = this.getNext();
 		if(this.currentToken.type == "t_string"){
+			this.tree.addNode(this.charList);
 			this.match(this.currentToken);
 		}else{
 			// error, expecting end of string "
@@ -662,10 +665,15 @@ this.parseId = function(){
 */
 this.parseCharList = function(){
 	if(this.errors.length == 0){
+		
+
 		this.currentToken = this.getNext();
 		if(this.currentToken.type == "t_char"){
 			// match char
-			this.match(this.currentToken);
+			this.charList += this.currentToken.tokenValue;
+			this.index++;
+			//this.match(this.currentToken);
+			
 			this.parseCharList();
 		
 		}
@@ -700,7 +708,7 @@ this.match = function(token){
 		&& token.type != "t_openParen" && token.type != "t_closeParen"
 		&& token.type != "t_if" && token.type != "t_print" 
 		&& token.type != "t_while" && token.type != 't_assignment'
-		&& token.type != "t_boolop")
+		&& token.type != "t_boolop" && token.type != 't_string')
 	{
 		if(token)
 		this.tree.addNode(token.tokenValue, "leaf");
