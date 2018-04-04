@@ -32,7 +32,9 @@ $(document).ready(function(){
 			 EVENT HANDLERS 
 		*********************************/
 
-		// compile onclick event handler
+		/*********************************
+			compile onclick event handler
+		*********************************/
 		function sendCompileRequest(){
 			//send all programs to backend to be compiled 
 			compile("/compile", programs, function(compileResults){
@@ -55,13 +57,15 @@ $(document).ready(function(){
 		document.getElementById("navCompile").onclick = sendCompileRequest;
 
 		
-		// console-toggler-button onlick event handler
+		/*********************************
+			console onlick event handler
+		*********************************/
 		$('#consoleToggle').on('click', function(){
 			// check if the console drawer is open
 			if(!$('.kitchen-sink-drawer').hasClass("active")){
 				// if its not open lets go ahead and play the open animation
 				// .stop clears the animation queue so there are no hangups
-				$('.CodeMirror').stop().animate({height: '50%'}, {
+				$('.CodeMirror').stop().animate({height: '30%'}, {
 					duration: 300,
 					complete: function(){
 						$('.kitchen-sink-drawer').show();
@@ -87,7 +91,9 @@ $(document).ready(function(){
 			}	
 		});
 
-		// editor on change event handler
+		/*********************************
+		 	editor on change event handler
+		 *********************************/
 		editor.on('change', function(codeEditor){
 			this.programs = []; // reset global programs
 
@@ -263,6 +269,7 @@ function emptyLexer(){
 function emptyParser(){
 	$('#parse').empty();
 }
+
 // loads the editor with the program assoicated with programid
 // clicking a sidebar program calls this
 function loadEditor(programid){
