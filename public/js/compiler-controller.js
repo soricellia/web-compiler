@@ -28,62 +28,33 @@ $(document).ready(function(){
 
 		$('.CodeMirror-gutters').css('background', '#e9ebee');
 
-		// EVENT HANDLERS 
+		/*********************************
+			 EVENT HANDLERS 
+		*********************************/
 
 		// compile onclick event handler
 		function sendCompileRequest(){
-			var i;
-			var orderedPrograms = []; // this is getting annoying...
-			for(i = 0 ; i < programs.length ; i++){
-				// some interesting things happen when we wait for the ajax request.
-				// the for loop will actually increment i before compile can give a 
-				// response. therefore, we store the program number as a seperate
-				// variable
-				console.log("program: "+i, programs[i])
-				if(programs[i]){
-					//send request to compile (found in ajax-requests.js)
-					compile("/compile", programs[i], i, function(programNum, compileResults){
-						//orderedPrograms.splice(programNum, 0, compileResults);
-						console.log(orderedPrograms);
-						var errors = compileResults[0];
-						var hints = compileResults[1];
-						var verboseMessages = compileResults[2];
-						var parseTree = compileResults[3];
-						orderedPrograms.splice(programNum, compileResults);
-						$('#consoleInfo').append("<br />");
-						printParserToConsole(programNum +1, errors, hints, verboseMessages, parseTree);
-						
-					});
+			//send all programs to backend to be compiled 
+			compile("/compile", programs, function(compileResults){
+				//empty everything in the console except lex
+				emptyParser();
+				
+				//compileResults is an object that needs to be converted into an array
+				compileResults = Object.values(compileResults);
+				var i;
+				for(i = 0 ; i < compileResults.length ; i++){
+					// print each result
+					printParseToConsole(i+1, 
+						compileResults[i]['errs'], 
+						compileResults[i]['hints'], 
+						compileResults[i]['verbose'], 
+						compileResults[i]['tree']);
 				}
-				// this means we have a bad lex, so we do nothing it with
-				else{
-					$('#consoleInfo').append("<br />");
-					printParserToConsole(i+1,null, null, ["Failed to Lex -- Ignoring Program " + (i+1)], null);
-
-				}
-			}
-
-			// console.log("orderedPrograms", orderedPrograms);
-			// for(i = 0; i < orderedPrograms.length ; i++){
-			// 	console.log(orderedPrograms[i][0]);
-			// 	console.log("i", i);
-			// 	var errors = orderedPrograms[i][0];
-			// 	var hints = orderedPrograms[i][1];
-			// 	var verboseMessages = orderedPrograms[i][2];
-			// 	var parseTree = orderedPrograms[i][3];
-			// 	$('#consoleInfo').append("<br />");
-			// 	printParserToConsole(i+1, errors, hints, verboseMessages, parseTree);
-
-
-			// }
-
+			});
 		}
-
-		
-		// register the compile request function up above
-		// to nav-compile-button onclick event handler
 		document.getElementById("navCompile").onclick = sendCompileRequest;
 
+		
 		// console-toggler-button onlick event handler
 		$('#consoleToggle').on('click', function(){
 			// check if the console drawer is open
@@ -117,22 +88,22 @@ $(document).ready(function(){
 		});
 
 		// editor on change event handler
-		// CALLS LEXER
 		editor.on('change', function(codeEditor){
 			this.programs = []; // reset global programs
 
 			var programs = codeEditor.getValue(); // local programs
-			programs = programs.split('$');
+			programs = programs.split('$'); // our metatoken to denote EOP
 
 			//reset the console
-			$('#consoleInfo').html("");
-			$('#consoleWarnings').html("");
-			$('#consoleErrors').html("");
-			
+			emptyLexer();
+
 			var i;
 			for(i = 0; i < programs.length ; i++){ // run each program
 				if(programs[i]){
-					// call to lexer.js generate tokens function
+					/***********************************************
+						LEXER call on each program 
+						seperated by '$' meta token
+					************************************************/
 					generateTokens(programs[i], function(tokens, warnings, lexErrors){
 						// lets store our current tokens
 						this.tokens = tokens;
@@ -148,13 +119,13 @@ $(document).ready(function(){
 
 						// for pretty output, space it
 						if(i != 0){
-							$('#consoleInfo').append('<br />');
+							$('#lex').append('<br />');
 
 						}
-						$('#consoleInfo').append('<h3 class="alert alert-info">Lexing program: '+(i+1)+'</h3>');
+						$('#lex').append('<h3 class="alert alert-info">Lexing program: '+(i+1)+'</h3>');
 						
 						// print output to the console
-						printToConsole(i+1,tokens, warnings, errors);	
+						PrintLexToConsole(i+1,tokens, warnings, errors);	
 					});
 				}
 			}
@@ -165,33 +136,37 @@ $(document).ready(function(){
 }); //end document.ready
 
 
-function printParserToConsole(programNumber, errors, hints, verboseMessages, parseTree){
+/********************************
+	prints parse information to console
+**********************************/
+function printParseToConsole(programNumber, errors, hints, verboseMessages, parseTree){
 	//print program counter
-	$('#consoleInfo').append('<h3 class="alert alert-info">Parsing program: '+ programNumber + '</h3>');
+	$('#parse').append('<h3 class="alert alert-info">Parsing program: '+ programNumber + '</h3>');
 
 	//print verbose messages
 	var i;
 	var output = "";
-	for(i = 0; i < verboseMessages.length ; i++){
-		$('#consoleInfo').append("<div class=\"alert alert-info\">"
-			+ verboseMessages[i] +"</div>"); 	
+	if(verboseMessages){
+		for(i = 0; i < verboseMessages.length ; i++){
+			$('#parse').append("<div class=\"alert alert-info\">"
+				+ verboseMessages[i] +"</div>"); 	
+		}
 	}
 
-	$('#consoleInfo').append("<br />");
+	$('#parse').append("<br />");
 
 	//print errors and hints	
 	if( errors && errors.length > 0){
-		$('#consoleInfo').append("<div class=\"alert alert-danger\">"+errors[0]+"</div>");
+		$('#parse').append("<div class=\"alert alert-danger\">"+errors[0]+"</div>");
 		
 		if(hints && hints.length > 0){
-			$('#consoleInfo').append("<div class=\"alert alert-warning\">"+hints[0]+"</div>");
+			$('#parse').append("<div class=\"alert alert-warning\">"+hints[0]+"</div>");
 		
 		}
 
-		$('#consoleInfo').append('<div class="alert alert-warning"> Ommiting CST from program ' +programNumber + ' because Errors Found</div>');
+		$('#parse').append('<div class="alert alert-warning"> Ommiting CST from program ' +programNumber + ' because Errors Found</div>');
 		
 	}
-
 	// print tree
 	else{
 		// newlines wont show up in HTML
@@ -201,26 +176,31 @@ function printParserToConsole(programNumber, errors, hints, verboseMessages, par
 		// also, since the tree has html like tags
 		// we have to be careful with how we add them to the DOM
 
-		$('#consoleInfo').append('<h3 class="alert alert-info"> Printing CST for program ' + programNumber);
+		$('#parse').append('<h3 class="alert alert-info"> Printing CST for program ' + programNumber);
 		for(i = 0; i < tree.length -1; i++){
 
 			// we are using (i+programNumber*10000) to make sure we create a unique ID element on the DOM.
 			// we have to do this to add elements to the console
 			// this is because we're adding elements to the console that LOOK like html, because of how the tree is represented
 			// so, in order to uniquely style these elements, we had to do this hacky approach... owch!
-			$('#consoleInfo').append("<div class=\"alert alert-success\" id=\"parseTree" + (i+programNumber*10000) + "\"></div>");
+			$('#parse').append("<div class=\"alert alert-success\" id=\"parseTree" + (i+programNumber*10000) + "\"></div>");
 			$('#parseTree' + (i+programNumber*10000)).text(tree[i]); 	
 		}
-		$('#consoleInfo').append('<h3 class="alert alert-success">Program ' + programNumber + ' Parsed Successfully');
+		$('#parse').append('<h3 class="alert alert-success">Program ' + programNumber + ' Parsed Successfully');
 
 	}
 
 	$('#consoleContent')[0].scrollTop = $('#consoleContent')[0].scrollHeight;
+
+	document.getElementsByClassName('consoleTab')[1].click();
 }
 
-//prints the output to the console
-function printToConsole(programNumber, tokens, warnings, errors){
-	
+
+/**********************************
+	prints lex to the console
+**********************************/
+function PrintLexToConsole(programNumber, tokens, warnings, errors){
+	//$('#lex').append('<h3 class="alert alert-info">Lexing program: '+ programNumber + '</h3>');
 	// PRINT ALL TOKENS TO THE CONSOLE
 	var i; // loop counter
 	var output =""; // string we're building
@@ -228,8 +208,8 @@ function printToConsole(programNumber, tokens, warnings, errors){
 		output += "<div class=\"alert alert-info\">LEXER: " + tokens[i] + "</div>";
 	}
 
-	$('#consoleInfo').append(output); 
-	$('#consoleInfo').css('display', 'block');
+	$('#lex').append(output); 
+	$('#lex').css('display', 'block');
 	
 	// PRINT OUR ERRORS
 	if(errors.length !== 0){
@@ -240,11 +220,11 @@ function printToConsole(programNumber, tokens, warnings, errors){
 		
 		}
 
-		$('#consoleInfo').append(output);
-		$('#consoleInfo').append('<h4 class=\"alert alert-danger\">Program ' +programNumber+' Lexed With '+errors.length+' errors.</h4>')
+		$('#lex').append(output);
+		$('#lex').append('<h4 class=\"alert alert-danger\">Program ' +programNumber+' Lexed With '+errors.length+' errors.</h4>')
 
 	}else{
-		$('#consoleInfo').append('<h4 class=\"alert alert-success\">Program ' +programNumber+' Lexed successfully.</h4>');
+		$('#lex').append('<h4 class=\"alert alert-success\">Program ' +programNumber+' Lexed successfully.</h4>');
 	
 	}
 
@@ -254,19 +234,63 @@ function printToConsole(programNumber, tokens, warnings, errors){
 		for(i = 0; i < warnings.length; i++){
 			output +=  "<br /><div class=\"alert alert-warning\">" + warnings[i] + "</div>";
 		}
-		$('#consoleWarnings').append(output);
-		$('#consoleWarnings').css('display', 'block');
+		$('#lex').append(output);
+		$('#lex').css('display', 'block');
 	}else{
 		// we're currently not doing anything with warnings
 	}
+	
+	//simulate a click so the tab switches properly
+	document.getElementsByClassName('consoleTab')[0].click();
+
 	// make sure our div scrolls with the content being added
 	$('#consoleContent')[0].scrollTop = $('#consoleContent')[0].scrollHeight;
+
 }
 
+/*********************************
+	empty the lexer
+	erases everything in 'lex' tab
+*********************************/
+function emptyLexer(){
+	$('#lex').empty();
+}
+
+/*********************************
+	empty the parser
+	erases everything in 'parse' tab
+*********************************/
+function emptyParser(){
+	$('#parse').empty();
+}
 // loads the editor with the program assoicated with programid
 // clicking a sidebar program calls this
 function loadEditor(programid){
 	loadProgram(programid, function(program){
 		editor.setValue(program);
 	})
+}
+
+// switches the console tab to the tab that was clicked
+function switchTab(evt, tabId){
+	var i, tablinks;
+	
+	//set everything to not visible
+	document.getElementById('parse').style.display = "none";
+	document.getElementById('ast').style.display = "none";
+	document.getElementById('lex').style.display = "none";
+	
+	//get all the tabs and make sure none of them are selected
+	tablinks = document.getElementsByClassName("consoleTab");
+	for(i = 0; i < tablinks.length; i++){
+		tablinks[i].className = tablinks[i].className.replace(" selected", "");
+	}
+	
+	//set the tab we're on to selected and display the tab's information
+	document.getElementById(tabId).style.display = "block";
+	evt.currentTarget.className += " selected";
+	evt.currentTarget.blur();
+
+	// make sure our div scrolls with the content being added
+	$('#consoleContent')[0].scrollTop = $('#consoleContent')[0].scrollHeight;
 }

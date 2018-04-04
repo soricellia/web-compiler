@@ -17,7 +17,7 @@ var Tree = require('./tree');
 const firstOfStatement = new Set(["t_print", "t_while", "t_if" 
 						, "t_type", "t_openBrace", "t_char"]);
 
-const firstOfExpr = new Set(["t_digit", "t_string", "t_openParen", "t_char"]);
+const firstOfExpr = new Set(["t_digit", "t_string", "t_openParen", "t_boolval", "t_char"]);
 
 function Parser(verbose){
 	// the parse tree
@@ -40,7 +40,18 @@ function Parser(verbose){
 this.parseTokens = function(tokens, done){
 
 	this.tokens = tokens;
-	this.errors.length = 0;
+	this.tree = new Tree();
+	//this.errors.length = 0;
+
+	//our index for iterating over tokens
+	this.index = 0;
+	this.errors = [];
+	this.currentToken = null;
+	this.hints = [];
+	this.verboseMessages = []
+	this.verbose = verbose;
+	this.symbolTable = [];
+	
 	// start parsing our grammer
 	this.parseProgram();
 
@@ -608,19 +619,30 @@ this.parseBooleanExpr = function(){
 
 				this.parseExpr();
 				this.kick();
-			}
 
-			this.currentToken = this.getNext();
+				this.currentToken = this.getNext();
 
-			if(this.currentToken.type == "t_closeParen"){
-				// match )
-				this.match(this.currentToken);
+				if(this.currentToken.type == "t_closeParen"){
+					// match )
+					this.match(this.currentToken);
+				}else{
+					// error, expecting )
+					this.errors.push("Error on line " + 
+						this.currentToken.linenumber +
+						". Found " + this.currentToken.tokenValue +
+						" Expecting \")\" character.");
+					
+					this.hints.push("Hint: BooleanExpr looks like (Expr boolop Expr)");
+			
+				}
+			
 			}else{
-				// error, expecting )
 				this.errors.push("Error on line " + 
-					this.currentToken.linenumber +
-					". Found " + this.currentToken.tokenValue +
-					" Expecting \")\" character. Hint: BooleanExpr looks like (Expr boolop Expr)");
+						this.currentToken.linenumber +
+						". Found " + this.currentToken.tokenValue +
+						" Expecting boolop.");
+
+				this.hints.push("Hint: BooleanExpr looks like (Expr boolop Expr)");
 			}
 
 		}else{
@@ -628,7 +650,9 @@ this.parseBooleanExpr = function(){
 			this.errors.push("Error on line " + 
 					this.currentToken.linenumber +
 					". Found " + this.currentToken.tokenValue +
-					" Expecting \"\" character. Hint: BooleanExpr looks like (Expr boolop Expr) or boolop");
+					" Expecting \"\" character.");
+
+			this.hints.push("Hint: BooleanExpr looks like (Expr boolop Expr)");
 		}
 	
 	}else{

@@ -1,11 +1,27 @@
 <div id="consoleDrawer" class="bmd-layout-drawer kitchen-sink-drawer active">
+  <div id="consoleTab">
+    <div class="container-fluid">
+        <ul class="nav navbar-nav">
+            <li>
+                <a href="#" class="consoleTab selected" onclick="switchTab(event, 'lex')">Lex</a>
+
+            </li>
+            <li>
+                <a href="#" class="consoleTab" onclick="switchTab(event, 'parse')">Parse</a>
+            </li>
+            <li>
+                <a href="#" class="consoleTab" onclick="switchTab(event, 'ast')">AST</a>
+            </li>
+        </ul>
+    </div>
+  </div>
   <div class="consoleArea"> 
     <div id="consoleContent">
-    	<div id="consoleInfo">
+    	<div id="lex">
     	</div>
-    	<div id="consoleErrors">
+    	<div id="parse">
     	</div>
-    	<div id="consoleWarnings">
+    	<div id="ast">
     	</div>
     </div>
   </div>

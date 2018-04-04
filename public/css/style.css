@@ -96,16 +96,21 @@ a, a:hover, a:focus {
     margin: 40px 0;
 }
 
+.selected {
+    background-color:white;
+    color:#7386D5;
+}
+
 
 /**
 	Console Styleing
 	**/
 .kitchen-sink-drawer {
+    padding-top: 5px;
     background: #7386D5;
-	padding-top: 40px;
 	padding-right: 15px;
 	padding-bottom: 15px;
-	height: 39%; 
+	height: 35%; 
     box-shadow: 0px 2px 1px rgba(0, 0, 0, 0.1) inset;
 }
 
