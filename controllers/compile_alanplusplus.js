@@ -3,24 +3,40 @@ exports.post = function(req, res) {
 	req.on("data", function(data){
 		// data is a json string
 		// convert json string to array
-		var tokens = JSON.parse(data);
-		var responseMessage = [];
+		var programs = JSON.parse(data);
+		var responseMessage = {};
 
 		// we init the parser with verbose on
 		var parser = new Parser(true);
 		
-		parser.parseTokens(tokens, function(errs, hints, verboseMessages, parseTree){
-			// build a response message through an array
-			responseMessage.push(errs);
-			responseMessage.push(hints);
-			responseMessage.push(verboseMessages);
-			responseMessage.push(parseTree);
+		// parse each program
 
-			// now we make the array into a json string and
-			// send it back to the front end
-			res.send(JSON.stringify(responseMessage));
-		});
+		var i;
+		for(i = 0 ; i < programs.length ; i++){
+			// if there was no program then that means there is a lex error
+			if(programs[i]){
+				parser.parseTokens(programs[i], function(errs, hints, verboseMessages, parseTree){
+					responseMessage[i] = {};
+					responseMessage[i]['errs'] = errs;
+					responseMessage[i]['hints'] = hints;
+					responseMessage[i]['verbose'] = verboseMessages;
+					responseMessage[i]['tree'] = parseTree;
 
-		//res.send(tree);
+					// if we're done parsing the last program
+					// send it back to the front end
+					if((i+1) == programs.length){
+						res.send(JSON.stringify(responseMessage));
+					}
+				});
+
+				//console.log(responseMessage);
+			}else{
+				responseMessage[i] = {};
+				responseMessage[i]['errs'] = ["Failed to Lex -- Ignoring Program"];
+				responseMessage[i]['hints'] = null;
+				responseMessage[i]['verbose'] = null;
+				responseMessage[i]['tree'] = null;
+			}
+		}
 	});
 };

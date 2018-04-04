@@ -32,6 +32,7 @@ function Token(type, value, linenumber){
 	this.type 			= type;
 	this.tokenValue 	= value;
 	this.linenumber 	= linenumber;
+
 }
 
 Token.prototype.toString = function tokenToString(){
@@ -40,12 +41,16 @@ Token.prototype.toString = function tokenToString(){
 			   this.tokenValue + 
 			   "  found on line number  "+
 			   this.linenumber;
+
 	}
+
 	else {
 		return this.type + "(\"" + 
 			   this.tokenValue + "\", " + 
 			   this.linenumber + ")";
+	
 	}
+
 }
 
 // OUR LIST OF TOKENS
@@ -60,6 +65,7 @@ var warnings = [];
 //KEEPING TRACK OF LINE NUMBERS
 var lineNumber = 1; // start from line 1
 var lastLine = lineNumber;
+
 // boolean value to tell if we're inside a string quote
 var inQuote = false; 
 
@@ -87,32 +93,41 @@ function generateTokens(input, callback){
 			// if we found a matching longest Token
 			if(longestToken){
 				if(longestToken.type != "ERROR"){
-					tokens[j] = longestToken; //store it
+					if(longestToken.type != "newline"){
+						tokens[j] = longestToken; //store it
+					
+					}
+
 					j++; //increment tokens list
 					lineNumber = longestToken.linenumber; // store the last line we got a token from
 					 
-				}
-				// error token case
-				else{
+				}else{
+					// error token case
 					errors.push(longestToken);
+				
 				}
+
 			}
+
 			else{
 				// there is no longest match
 				// this means the input is probably a space or newline
 				// flag it as a warning
 				//warnings.push("LEXER: warning, a token could not be made"
 				// +"for input: "+ input);
+				console.log("----------------DON'T SQUELCH ERRORS --------------------------");
 			}
 
 			// increment input
-			input = inputSubstring;	
+			input = inputSubstring;
+
 		});	// end find longest match
 
 	} // end while
 
 	//return to the callback
 	callback(tokens, warnings, errors);
+
 }
 
 /****************************************************
@@ -129,22 +144,40 @@ function findNextLongestMatch(input, callback){
 	var nextChar = ""; // next character in input
 	var longestToken = null; // this is what we're trying to find
 	var newLines = 0;
+	
 	//while we havnt found a match, keep looking for one
 	while(input && !matchFound){
 		nextChar = input[0]; // get the next character
 		
 		// check if this character is a new line
 		if(re_newline.test(nextChar)){
-			lineNumber ++; // increment our line number
-			newLines++; 
-			tokenString = tokenString + nextChar;
-			input = input.substring(1, input.length); //increment our input string
+				if(!tokenString){
+					lineNumber ++; // increment our line number
+				
+					longestToken = convertToToken(nextChar, lineNumber);
+		
+					tokenString = tokenString + nextChar;
+					input = input.substring(1, input.length); //increment our input string
+					matchFound = true;
+
+				}
+				else{
+					// if we have something in tokenstring, we have to tokenize that first 
+					longestToken = new Token("t_char", tokenString[0], lineNumber);
+					input = input + tokenString.substring(1, tokenString.length);
+					matchFound = true;
+					
+				}
+
 		}
+
 		// check if this character is a space
 		else if(re_space.test(nextChar)){
 			// we ignore it
 			input = input.substring(1, input.length); //increment our input string
+		
 		}
+
 		//check if this character is a quote
 		else if(re_string.test(nextChar)){
 			// we have to take all input and just make them normal char tokens
@@ -158,6 +191,7 @@ function findNextLongestMatch(input, callback){
 			input = input.substring(1, input.length);
 
 		}
+
 		// lets try to find a longest match 
 		else if(!inQuote){
 			charToken = convertToToken(nextChar, lineNumber);
@@ -175,12 +209,16 @@ function findNextLongestMatch(input, callback){
 					input = tokenString + input;
 					if(longestToken.tokenValue == '\n')
 						longestToken = null;
+				
 				}
+
 				// nothing else to process, this should be a clean token
 				else{
 					longestToken = charToken;
 					matchFound = true;
+				
 				}
+
 			}
 			
 			// character must be apart of a token, continue looking for a longest match
@@ -200,7 +238,9 @@ function findNextLongestMatch(input, callback){
 						matchFound = true;
 
 						input = tokenString + input;
+					
 					}
+
 					// we can just take this tokenString+char as longestToken
 					else{
 				
@@ -209,7 +249,9 @@ function findNextLongestMatch(input, callback){
 					
 						//matchFound = true;
 					}
+
 				}
+
 				// if we get a str_expr that means we're not done
 				// finding the longest match
 				if(longestToken.type == "str_expr"){
@@ -227,14 +269,21 @@ function findNextLongestMatch(input, callback){
 								// we make it into a token and consume the input string
 								longestToken = convertToToken(tokenString+input[1], lineNumber);
 								input = input.substring(1, input.length);
+							
 							}
+
 							// it wasnt a boolop, so this must be an assignment
 							else{
 								if(tokenString == "!"){
 									longestToken = new Token("ERROR", "!", lineNumber);
-								}else if(tokenString == "="){
+								
+								}
+
+								else if(tokenString == "="){
 									longestToken = new Token("t_assignment", tokenString, lineNumber);	
-								}	
+								
+								}
+
 							}
 
 							// make sure to say we found a match
@@ -245,23 +294,30 @@ function findNextLongestMatch(input, callback){
 						else{
 							//testing
 							console.log(input);
+						
 						}
+					
 					} // end assignment vs equality check
+				
 				}
+				
 				// error case
 				else if(longestToken.type == "ERROR"){
 					// add the error to our list of errors
 					errors.push(longestToken);
 				}
+
 				// this means we found a token with a longest match. 
 				// just flag it
 				else{
 					matchFound = true;
 				}
+
 			}
 			//increment our input string
 			input = input.substring(1, input.length);
 		}
+
 		// this means we're in a quote! lets just process the token as a character token and keep it moving
 		else if(nextChar != "\""){
 			//process token into character token
@@ -272,12 +328,15 @@ function findNextLongestMatch(input, callback){
 				if(longestToken.tokenValue == '!'){
 					longestToken.type = "ERROR";
 				}
+
 				else if(longestToken.tokenValue == '='){
 					longestToken.type = "t_assignment";
 				}
+
 				else{
 					longestToken.type = "t_char";
 				}
+
 			}
 
 			//increment our input string
@@ -294,13 +353,16 @@ function findNextLongestMatch(input, callback){
 		if(!input && tokenString && !matchFound){
 			//convert first character into character token
 			lineNumber = lineNumber - newLines;
+			
 			if(tokenString[0] != '\n' && tokenString[0] != ' '){
 				longestToken = new Token("t_char", tokenString[0], lineNumber);
 
 			}
+			
 			else{
 				lineNumber++;
 				longestToken = null;
+			
 			}
 
 			matchFound = true;
@@ -308,75 +370,117 @@ function findNextLongestMatch(input, callback){
 			
 			//switch input to the tokenString so we can return that to the callback
 			input = tokenString.substring(1, tokenString.length);
+		
 		}
+
 		if(longestToken){
 			if(longestToken.tokenValue == '\n' || longestToken.tokenValue == ' '){
 				// tos it out
 				longestToken = null;
+			
 			}
 		}
+
 	} // end while
 
 	// return to the callback
 	callback(longestToken, input);
+
 }
 
 function convertToToken(input, lineNumber){
 	if(re_openBrace.test(input)){
 		return new Token("t_openBrace", input, lineNumber);
+	
 	}
+	
 	else if(re_closeBrace.test(input)){
 		return new Token("t_closeBrace", input, lineNumber);
+	
 	}
+	
 	else if(re_openParen.test(input)){
 		return new Token("t_openParen", input, lineNumber);	
+	
 	}
+	
 	else if(re_closeParen.test(input)){
 		return new Token("t_closeParen", input, lineNumber);
+	
 	}
+	
 	else if(re_digit.test(input)){
 		return new Token("t_digit", input, lineNumber);
+	
 	}
+	
 	else if(re_intop.test(input)){
 		return new Token("t_intop", input, lineNumber);
+	
 	}
+	
 	else if(re_string.test(input)){
 		return new Token("t_string", input, lineNumber);
+	
 	}
+	
 	else if(re_boolop.test(input)){
 		return new Token("t_boolop", input, lineNumber);
+	
 	}
+	
 	else if(re_boolval.test(input)){
 		return new Token("t_boolval", input, lineNumber);
+	
 	}
+	
 	else if(re_type.test(input)){
 		return new Token("t_type", input, lineNumber);
+	
 	}
+	
 	else if(re_print.test(input)){
 		return new Token("t_print", input, lineNumber)
+	
 	}
+	
 	else if(re_if.exec(input)){
 		return new Token("t_if", input, lineNumber);
+	
 	}
+	
 	else if(re_while.test(input)){
 		return new Token("t_while", input, lineNumber);
+	
 	}
 
 	// META TOKENS
 	else if(re_char.test(input)){
 		return new Token("str_expr", input, lineNumber);
+	
 	}
+	
 	else if(re_assignment.test(input)){
 		return new Token("str_expr", input, lineNumber);
+	
 	}
+	
 	else if(re_epoint.test(input)){
 		return new Token("str_expr", input, lineNumber);
+	
 	}
-
+	
+	else if(re_newline.test(input)){
+		return new Token("newline", "\n", lineNumber);
+	
+	}
+	
 	// error case
 	else{
 		return new Token("ERROR", input, lineNumber);
+	
 	}
+
 }
 
 

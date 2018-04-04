@@ -1,20 +1,16 @@
 # Web Compiler
-## A note to the Professor
 
-There are a few things I wanted to bring up before you grade my project, so things are less confusing
+# a note to the prof
 
-1) The console on my GUI is pretty small, and im working on making it expand to full-screen. However, when youre grading this, it might be annoying to look at a CST with the small console. I added a log to the terminal you can view on a successful parse, so you can view the CST a little easier for now. You can still see the output in my GUI, and this is temporary until I can expand my console toolbar. Youll see what I mean.    
+Hi prof, 
 
 
-2) This one is actually really annoying! Because of how im sending information to and from my backend, sometimes youll notice while compiling multiple programs that some of the programs are coming back to the front end in the WRONG ORDER. this means i lex fine, but youll notice some programs in the wrong order on parse. I have a fix in the works, but its commented out and its 4am and my eyes are bleeding. terribly sorry. I tried to make this easy. Enjoy!
+im still working as youre reading this so if you can wait to grade me so i dont fail the course that would be fantastic. 
 
-3) The symbol table is only printed to the terminal.
 
-4) parser programs and test cases are under "Parser Programs" in the GUI
+Thanks,
+  tony
 
-5) I broke my line numbers somewhere between project 1 and 2. Im not really sure when. This will have to be a spring break TODO.
-
-Happy Snow Day
 
 ## Stack information
 
