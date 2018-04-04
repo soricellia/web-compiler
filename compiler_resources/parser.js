@@ -34,24 +34,17 @@ function Parser(verbose){
 	this.verboseMessages = []
 	this.verbose = verbose;
 	this.symbolTable = [];
-// public functions
+
+
+/******************
+ public functions
+******************/
 
 // called to init the parse program
 this.parseTokens = function(tokens, done){
-
 	this.tokens = tokens;
-	this.tree = new Tree();
-	//this.errors.length = 0;
+	this.clearParser();
 
-	//our index for iterating over tokens
-	this.index = 0;
-	this.errors = [];
-	this.currentToken = null;
-	this.hints = [];
-	this.verboseMessages = []
-	this.verbose = verbose;
-	this.symbolTable = [];
-	
 	// start parsing our grammer
 	this.parseProgram();
 
@@ -73,6 +66,27 @@ this.parseTokens = function(tokens, done){
 	} 
 }
 
+/************************
+	clears the parser
+***********************/
+this.clearParser = function(){
+	this.tree = new Tree();
+	//this.errors.length = 0;
+
+	//our index for iterating over tokens
+	this.index = 0;
+	this.errors = [];
+	this.currentToken = null;
+	this.hints = [];
+	this.verboseMessages = []
+	this.verbose = verbose;
+	this.symbolTable = [];
+
+}
+
+/*************************
+	starts the parsing sequence 
+**************************/
 this.parseProgram = function(){
 	// add the root node
 	this.tree.addNode("Program", "branch");
