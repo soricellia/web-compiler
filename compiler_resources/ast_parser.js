@@ -344,6 +344,32 @@ this.parseAssignmentStatement = function(){
 
 		if(this.currentToken.type == "t_char"){
 			// match ID
+			var assignVar = this.currentToken;
+			var i, j;
+			var isDeclared = false;
+
+			//start at the current scope and try to find the variable
+			console.log("st: ", this.symbolTable);
+			console.log("scope: ", this.scope);
+			for(i = this.scope; i >= 0; i--){
+				for(j = 0; j < this.symbolTable[i].length ; j++){
+					console.log("name: ", this.symbolTable[i][j].name);
+					console.log("value: ", assignVar.tokenValue);
+					
+					if(this.symbolTable[i][j].name == assignVar.tokenValue){
+						this.symbolTable[i][j].initalized = true;
+						j = this.symbolTable[i].length;
+						i = 0;
+						isDeclared = true;
+					}
+				}
+			}
+			if(!isDeclared){
+				this.warnings.push("Warning: variable " 
+					+ assignVar.tokenValue + " on line "
+					+ assignVar.linenumber + " is assigned a value but undeclared.");
+			}
+
 			this.match(this.currentToken);
 
 			this.currentToken = this.getNext();
@@ -352,7 +378,7 @@ this.parseAssignmentStatement = function(){
 				// match =
 				this.match(this.currentToken);
 				this.parseExpr();
-
+				
 			}else{
 				// error, missing + 
 				this.errors.push("Error on line " +
