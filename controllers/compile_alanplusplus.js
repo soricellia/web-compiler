@@ -51,10 +51,11 @@ exports.post = function(req, res) {
 
 function parseAST(tokens, responseMessage){
 	var astParser = new ASTParser(true);
-	astParser.parseTokens(tokens, function(errs, warnings, ast){
+	astParser.parseTokens(tokens, function(errs, warnings, ast, symbolTable){
 		responseMessage['ast'] = {};
 		responseMessage['ast']['errs'] = errs;
 		responseMessage['ast']['warnings'] = warnings;
 		responseMessage['ast']['tree'] = ast;
+		responseMessage['ast']['symbolTable'] = symbolTable
 	})
 }

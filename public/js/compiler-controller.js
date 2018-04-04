@@ -39,18 +39,27 @@ $(document).ready(function(){
 			//send all programs to backend to be compiled 
 			compile("/compile", programs, function(compileResults){
 				//empty everything in the console except lex
-				emptyParser();
+				emptyCompiler();
 				
 				//compileResults is an object that needs to be converted into an array
 				compileResults = Object.values(compileResults);
 				var i;
 				for(i = 0 ; i < compileResults.length ; i++){
 					// print each result
+
+					// print to parser console
 					printParseToConsole(i+1, 
 						compileResults[i]['parse']['errs'], 
 						compileResults[i]['parse']['hints'], 
 						compileResults[i]['parse']['verbose'], 
 						compileResults[i]['parse']['tree']);
+
+					// print to ast console
+					printASTToConsole(i+1, 
+						compileResults[i]['ast']['errs'], 
+						compileResults[i]['ast']['warnings'], 
+						compileResults[i]['ast']['tree'], 
+						compileResults[i]['ast']['symbolTable']);
 				}
 			});
 		}
@@ -202,6 +211,59 @@ function printParseToConsole(programNumber, errors, hints, verboseMessages, pars
 }
 
 
+/********************************
+	prints AST information to console
+**********************************/
+function printASTToConsole(programNumber, errors, warnings, ast, symbolTable){
+	//print the ast
+
+	var tree = ast.split("\n");
+	$('#ast').append('<h3 class="alert alert-info">Printing AST for program '+ programNumber + '</h3>');
+	var i;
+	for(i = 0; i < tree.length -1; i++){
+		$('#ast').append("<div class=\"alert alert-success\" id=\"abstractSyntaxTree" + (i+programNumber*10000) + "\"></div>");	
+		$('#abstractSyntaxTree' + (i+programNumber*10000)).text(tree[i]);
+	}
+
+	// print the symbol table
+
+	if(!errors && symbolTable){
+		$('#ast').append('<br />');
+		$('#ast').append('<h3 class ="alert alert-info"> Printing Symbol Table for Program ' + i + '</h3>');
+		$('#ast').append('<h4 class="alert alert-info"> Name | Type | Scope | Line | Initalized </h4>');
+		for(i = 0 ; i < symbolTable.length ; i ++){
+			var j;
+			for(j = 0; j < symbolTable[i].length ; j++){
+				if(symbolTable[i][j].type == "int"){
+					$('#ast').append('<div class="alert alert-info">' + symbolTable[i][j].name 
+						+ '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + symbolTable[i][j].type 
+						+ '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + symbolTable[i][j].scope 
+						+ '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + symbolTable[i][j].line 
+						+ '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + symbolTable[i][j].initalized 
+						+ '    ' + '</div>');
+				}else if(symbolTable[i][j].type == "string"){
+					$('#ast').append('<div class="alert alert-info">' + symbolTable[i][j].name 
+						+ '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + symbolTable[i][j].type 
+						+ '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + symbolTable[i][j].scope 
+						+ '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + symbolTable[i][j].line 
+						+ '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + symbolTable[i][j].initalized 
+						+ '    ' + '</div>');
+				}else{
+					$('#ast').append('<div class="alert alert-info">' + symbolTable[i][j].name 
+						+ '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + symbolTable[i][j].type 
+						+ '&nbsp;&nbsp;&nbsp;&nbsp;' + symbolTable[i][j].scope 
+						+ '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + symbolTable[i][j].line 
+						+ '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + symbolTable[i][j].initalized 
+						+ '    ' + '</div>');
+				}
+			}
+		}
+	}
+	$('#consoleContent')[0].scrollTop = $('#consoleContent')[0].scrollHeight;
+
+	document.getElementsByClassName('consoleTab')[2].click();
+}
+
 /**********************************
 	prints lex to the console
 **********************************/
@@ -266,9 +328,12 @@ function emptyLexer(){
 	empty the parser
 	erases everything in 'parse' tab
 *********************************/
-function emptyParser(){
+function emptyCompiler(){
 	$('#parse').empty();
+	$('#ast').empty();
+	$('#codeGen').empty();
 }
+
 
 // loads the editor with the program assoicated with programid
 // clicking a sidebar program calls this
