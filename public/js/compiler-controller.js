@@ -229,7 +229,7 @@ function printASTToConsole(programNumber, errors, warnings, ast, symbolTable){
 
 	if(!errors && symbolTable){
 		$('#ast').append('<br />');
-		$('#ast').append('<h3 class ="alert alert-info"> Printing Symbol Table for Program ' + i + '</h3>');
+		$('#ast').append('<h3 class ="alert alert-info"> Printing Symbol Table for Program ' + programNumber + '</h3>');
 		$('#ast').append('<h4 class="alert alert-info"> Name | Type | Scope | Line | Initalized </h4>');
 		for(i = 0 ; i < symbolTable.length ; i ++){
 			var j;
