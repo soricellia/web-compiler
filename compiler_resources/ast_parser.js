@@ -490,6 +490,11 @@ this.parseExpr = function(){
 **/
 this.parseIntExpr = function(){
 	if(this.errors.length == 0){
+		// first look ahead one token and see if the next token is an intop
+		if(this.tokens[this.index+1].type == "t_intop"){
+			//the intop is going to be the branch in the AST
+			this.tree.addNode("Add", 'branch');
+		}
 		// match digit
 		this.match(this.currentToken);
 
@@ -500,7 +505,7 @@ this.parseIntExpr = function(){
 			this.match(this.currentToken);
 
 			this.parseExpr();
-
+			this.kick();
 		}else{
 			// lambda production
 		}
@@ -708,7 +713,8 @@ this.match = function(token){
 		&& token.type != "t_openParen" && token.type != "t_closeParen"
 		&& token.type != "t_if" && token.type != "t_print" 
 		&& token.type != "t_while" && token.type != 't_assignment'
-		&& token.type != "t_boolop" && token.type != 't_string')
+		&& token.type != "t_boolop" && token.type != 't_string'
+		&& token.type != "t_intop")
 	{
 		if(token)
 		this.tree.addNode(token.tokenValue, "leaf");
