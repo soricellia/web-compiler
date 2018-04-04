@@ -1,7 +1,7 @@
 /****************************************************************
-	Parser.js
+	ast_parser.js
 	Input: 
-		Constructor: parser(verbose)
+		Constructor: ASTParser(verbose)
 					-verbose outputs the stack trace made during the 
 					 recursive decent parse
 		parseTokens: parseTokens(tokens, done)
@@ -9,8 +9,11 @@
 					-done is a callback function
 	Purpose:
 		parses list of tokens using alan++ language grammer
+		into a abstract syntax tree. 
+
+		Scope checking and type checking via symbol table is done here
 	output:
-		return(errors, hints, verboseMessages, parseTree)
+		return(errors, warnings, ast, symbolTable)
 ***************************************************************/
 var Tree = require('./tree');
 
@@ -18,6 +21,26 @@ const firstOfStatement = new Set(["t_print", "t_while", "t_if"
 						, "t_type", "t_openBrace", "t_char"]);
 
 const firstOfExpr = new Set(["t_digit", "t_string", "t_openParen", "t_boolval", "t_char"]);
+
+
+/**
+	symbol table element definition
+**/
+function SymbolTableElement(name, type, scope, line){
+	this.name  = name;
+	this.type  = type;
+	this.scope = scope;
+	this.line  = line;
+	this.initalized = false;
+}
+SymbolTableElement.prototype.toString = function symbolTableElementToString(){
+		return this.name + "    " 
+			+ this.type + "    " 
+			+ this.scope + "    " 
+			+ this.line + "     "
+			+ this.initalized;
+	}
+ 
 
 function ASTParser(verbose){
 	// the parse tree
@@ -31,10 +54,13 @@ function ASTParser(verbose){
 
 	this.currentToken = null;
 	this.warnings = [];
-	this.verboseMessages = []
 	this.verbose = verbose;
-	this.symbolTable = [];
 	this.charList = "";
+
+	// init the symbol table
+	this.symbolTable = [];
+	this.scope = 0;
+	this.symbolTable[this.scope] = []; // we start on scope 0
 
 /******************
  public functions
@@ -45,23 +71,24 @@ this.parseTokens = function(tokens, done){
 	this.tokens = tokens;
 	this.clearParser();
 
-	// start parsing our grammer
+	// build our AST
 	this.parseProgram();
 
+	// check for errors
 	if(!this.errors.length > 0){
 		// we made it here therefore we can just return the completed tree
-		done(null, this.warnings, this.tree.toString());
+		done(null, this.warnings, this.tree.toString(), this.symbolTable);
 		
 		// this is for ease of grading
 		console.log(this.tree.toString());
-		console.log("Symbol Table wannbe thingy", this.symbolTable);
+		console.log("Symbol Table", this.symbolTable);
 	}
 	
 	else{
 		console.log(this.tree.toString());
 		console.log(this.errors);
 		// process our errors
-		done(this.errors, this.hints, this.verboseMessages, null);
+		done(this.errors, this.warnings, this.tree.toString(), null);
 
 	} 
 }
@@ -77,20 +104,18 @@ this.clearParser = function(){
 	this.index = 0;
 	this.errors = [];
 	this.currentToken = null;
-	this.hints = [];
-	this.verboseMessages = []
-	this.verbose = verbose;
-	this.symbolTable = [];
+	this.warnings = [];
 
+	// init the symbol table
+	this.symbolTable = [];
+	this.scope = 0;
+	this.symbolTable[this.scope] = []; // we start on scope 0
 }
 
 /*************************
 	starts the parsing sequence 
 **************************/
 this.parseProgram = function(){
-	if(this.verbose){
-		this.verboseMessages.push("ParseProgram()");
-	}
 	this.parseBlock();
 	this.kick();
 
@@ -202,10 +227,6 @@ this.parseStatementList = function(){
 			  ::== Block 
 **/
 this.parseStatement = function(){
-	if(this.verbose){
-		this.verboseMessages.push("ParseStatement()");
-	}
-
 	if(this.errors.length == 0){
 		if(this.currentToken.type == "t_print"){
 			this.parsePrintStatement();
@@ -233,8 +254,11 @@ this.parseStatement = function(){
 		}
 
 		else if(this.currentToken.type == "t_openBrace"){
+			this.createNewScope();
 			this.parseBlock();
 			this.kick();
+			this.scope--;
+			console.log("symbol table after block", this.symbolTable)
 		
 		}
 
@@ -257,10 +281,6 @@ this.parseStatement = function(){
 	PrintStatement ::== print ( Expr )
 */
 this.parsePrintStatement = function(){
-	if(this.verbose){
-		this.verboseMessages.push("ParsePrintStatement()");
-	}
-
 	if(this.errors.length == 0){
 		this.tree.addNode("Print", "branch");
 
@@ -358,9 +378,8 @@ this.parseVarDecl = function(){
 	if(this.errors.length == 0){
 		this.tree.addNode("Variable Declaration", "branch");
 
-		// used for symbol table stuff
-		var scopeMan =  this.getNext().tokenValue;
-		
+		// create new symbol table element
+		stElement = new SymbolTableElement(null, this.currentToken.tokenValue, this.scope, this.currentToken.linenumber);
 		//match type
 		this.match(this.currentToken);
 
@@ -369,10 +388,11 @@ this.parseVarDecl = function(){
 		if(this.currentToken.type == "t_char"){
 			this.parseId();
 
-			// add the type and ID to the symbol table 
-			scopeMan = scopeMan + ' ' + this.currentToken.tokenValue;
-			this.symbolTable.push(scopeMan);
+			stElement.name = this.currentToken.tokenValue;
+			this.symbolTable[this.scope].push(stElement);
 
+			console.log(this.scope);
+			console.log(this.symbolTable);
 		}else{
 			// error, expecting id
 			this.errors.push("Error on line" + 
@@ -401,13 +421,14 @@ this.parseWhileStatement = function(){
 		this.match(this.currentToken);
 
 		this.parseBooleanExpr();
-		this.parseBlock();
 
 		// new scope
+		this.createNewScope();
+		this.parseBlock();
 
 		// pop scope back
 		this.kick();
-	
+		this.kickScope();	
 	}else{
 		// preexisting error case, bubble out of recursion	
 	
@@ -425,10 +446,13 @@ this.parseIfStatement = function(){
 		this.match(this.currentToken);
 
 		this.parseBooleanExpr();
-		this.parseBlock();
+		
 		// new scope
-
+		this.createNewScope();
+		this.parseBlock();
+		
 		this.kick();
+		this.kickScope();
 	}else{
 		// preexisting error case, bubble out of recursion	
 	}	
@@ -729,6 +753,16 @@ this.kick = function(){
 	this.tree.endChildren();
 }
 
+
+this.createNewScope = function(){
+	this.scope++;
+	this.symbolTable[this.scope] = [];
 }
 
+this.kickScope = function(){
+	this.scope--;
+	//this.symbolTable[this.scope] = []
+}
+
+}
 module.exports = ASTParser;
