@@ -669,34 +669,42 @@ this.parseBooleanExpr = function(){
 
 			// match (
 			this.match(this.currentToken);
-			
-		/*	// check if what we have is declared in symbol table
-			var i, j;
-			var isDeclared = false;
-				
-			for(i = this.scope ; i >= 0 ; i--){
-				for(j = 0; j < this.symbolTable[i].length ; j++){
-					if(this.symbolTable[i][j].name == prevToken.tokenValue 
-							|| prevToken.type != "t_digit"
-							|| prevToken.type != "t_string"
-							|| prevToken.type != "t_boolval"){
-						isDeclared = true;
-					}
-				}
-			}
-			if(!isDeclared){
-				this.errors.push("Error: attempting to use variable " + prevToken.tokenValue + " on line " + prevToken.linenumber + " before being declared");
-			}*/
 
+
+			var oneLookAhead = this.tokens[this.index+1];
+			
 			// we look ahead one token to see if the next is a boolop
 			// if it is we want to add it to the tree first
-			if(this.tokens[this.index+1].type == "t_boolop"){
-				if(this.tokens[this.index+1].tokenValue == "=="){
+			if(oneLookAhead.type == "t_boolop"){
+				if(oneLookAhead.tokenValue == "=="){
 					this.tree.addNode("Equals", "branch");
 				}else{
 					this.tree.addNode("Not Equals", "branch");
 				}
 			}
+
+			var lookAhead = this.tokens[this.index]; 
+			console.log("LOOK AHEAD ======", lookAhead);
+			// make sure we're not using an undeclared variable
+			if(lookAhead.type == "t_char"){
+				// check if what we have is declared in symbol table
+				var i, j;
+				var isDeclared = false;
+				
+				for(i = this.scope ; i >= 0 ; i--){
+					for(j = 0; j < this.symbolTable[i].length ; j++){
+						if(this.symbolTable[i][j].name == lookAhead.tokenValue){
+							isDeclared = true;
+						}
+					}
+				}
+				if(!isDeclared){
+					this.errors.push("Error: attempting to use variable " 
+						+ lookAhead.tokenValue + " on line " 
+						+ lookAhead.linenumber + " before being declared");
+				}				
+			}
+
 
 			this.parseExpr();
 			
@@ -705,6 +713,31 @@ this.parseBooleanExpr = function(){
 			if(this.currentToken.type == "t_boolop"){
 				// match boolop  
 				this.match(this.currentToken);
+
+
+				var lookAhead = this.tokens[this.index]; 
+				
+				// make sure we're not using an undeclared variable
+				if(lookAhead.type == "t_char"){
+					// check if what we have is declared in symbol table
+					var i, j;
+					var isDeclared = false;
+				
+					for(i = this.scope ; i >= 0 ; i--){
+						for(j = 0; j < this.symbolTable[i].length ; j++){
+							if(this.symbolTable[i][j].name == lookAhead.tokenValue){
+								isDeclared = true;
+							}
+						}
+					}
+					if(!isDeclared){
+						this.errors.push("Error: attempting to use variable " 
+							+ lookAhead.tokenValue + " on line " 
+							+ lookAhead.linenumber + " before being declared");
+					}				
+				}
+
+
 
 				this.parseExpr();
 				
@@ -717,33 +750,18 @@ this.parseBooleanExpr = function(){
 					// match )
 					this.match(this.currentToken);
 				}else{
-					// error, expecting )
-					this.errors.push("Error on line " + 
-						this.currentToken.linenumber +
-						". Found " + this.currentToken.tokenValue +
-						" Expecting \")\" character.");
 					
-					this.hints.push("Hint: BooleanExpr looks like (Expr boolop Expr)");
-			
+
 				}
 			
 			}else{
-				this.errors.push("Error on line " + 
-						this.currentToken.linenumber +
-						". Found " + this.currentToken.tokenValue +
-						" Expecting boolop.");
 
-				this.hints.push("Hint: BooleanExpr looks like (Expr boolop Expr)");
+
 			}
 
 		}else{
-			// error, expecting +
-			this.errors.push("Error on line " + 
-					this.currentToken.linenumber +
-					". Found " + this.currentToken.tokenValue +
-					" Expecting \"\" character.");
+			
 
-			this.hints.push("Hint: BooleanExpr looks like (Expr boolop Expr)");
 		}
 	
 	}else{
@@ -760,6 +778,7 @@ this.parseId = function(){
 	if(this.errors.length == 0){
 		this.currentToken = this.getNext();
 		if(this.currentToken.type == "t_char"){
+			
 			// match char
 			this.match(this.currentToken);	
 		
