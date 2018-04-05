@@ -258,6 +258,11 @@ function printASTToConsole(programNumber, errors, warnings, ast, symbolTable){
 				}
 			}
 		}
+		//error case
+	}else{
+		$('#ast').append('<br />');
+		$('#ast').append('<div class ="alert alert-danger">' + errors[0] + '</div>');
+		$('#ast').append('<div class ="alert alert-warning"> Ommitting Symbol Table because errors found.</div>');
 	}
 	$('#consoleContent')[0].scrollTop = $('#consoleContent')[0].scrollHeight;
 

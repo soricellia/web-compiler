@@ -353,21 +353,22 @@ this.parseAssignmentStatement = function(){
 			console.log("scope: ", this.scope);
 			for(i = this.scope; i >= 0; i--){
 				for(j = 0; j < this.symbolTable[i].length ; j++){
-					console.log("name: ", this.symbolTable[i][j].name);
-					console.log("value: ", assignVar.tokenValue);
-					
 					if(this.symbolTable[i][j].name == assignVar.tokenValue){
 						this.symbolTable[i][j].initalized = true;
 						j = this.symbolTable[i].length;
 						i = 0;
 						isDeclared = true;
+
 					}
+
 				}
+
 			}
 			if(!isDeclared){
 				this.warnings.push("Warning: variable " 
 					+ assignVar.tokenValue + " on line "
 					+ assignVar.linenumber + " is assigned a value but undeclared.");
+			
 			}
 
 			this.match(this.currentToken);
@@ -378,7 +379,39 @@ this.parseAssignmentStatement = function(){
 				// match =
 				this.match(this.currentToken);
 				this.parseExpr();
-				
+
+				// check to make sure we assigned it the correct type
+				for(i = this.scope; i >= 0; i--){
+					for(j = 0; j < this.symbolTable[i].length ; j++){
+						if(this.currentToken.type == "t_string"){
+							if(this.symbolTable[i][j].type != "string"
+									&& this.symbolTable[i][j].name == assignVar.tokenValue){
+								this.errors.push("Error: type mismatch."
+									+ " Variable " + this.symbolTable[i][j].name
+									+ " is of type " + this.symbolTable[i][j].type 
+									+ " but is assigned a value of type string");
+							}	
+						}
+						else if(this.tokens[this.index-1].type == 't_digit'){
+							if(this.symbolTable[i][j].type != "int"
+									&& this.symbolTable[i][j].name == assignVar.tokenValue){
+								this.errors.push("Error: type mismatch."
+									+ " Variable " + this.symbolTable[i][j].name
+									+ " is of type " + this.symbolTable[i][j].type 
+									+ " but is assigned a value of type int");
+							}
+						}else if(this.tokens[this.index-1].type == 't_boolval'){
+							if(this.symbolTable[i][j].type != "boolean" 
+								&& this.symbolTable[i][j].name == assignVar.tokenValue){
+									this.errors.push("Error: type mismatch."
+									+ " Variable " + this.symbolTable[i][j].name
+									+ " is of type " + this.symbolTable[i][j].type 
+									+ " but is assigned a value of type boolean");
+								
+							}
+						}
+					}
+				}	
 			}else{
 				// error, missing + 
 				this.errors.push("Error on line " +
