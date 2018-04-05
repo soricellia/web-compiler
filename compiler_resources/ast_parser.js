@@ -295,6 +295,24 @@ this.parsePrintStatement = function(){
 
 				this.parseExpr();
 
+				// check if what we have is declared in symbol table
+				var i, j;
+				var isDeclared = false;
+				var prevToken = this.tokens[this.index - 1];
+				
+				for(i = this.scope ; i >= 0 ; i--){
+					for(j = 0; j < this.symbolTable[i].length ; j++){
+						if(this.symbolTable[i][j].name == prevToken.tokenValue 
+							|| prevToken.type != "t_digit"
+							|| prevToken.type != "t_string"
+							|| prevToken.type != "t_boolval"){
+							isDeclared = true;
+						}
+					}
+				}
+				if(!isDeclared){
+					this.errors.push("Error: attempting to use variable " + prevToken.tokenValue + " on line " + prevToken.linenumber + " before being declared");
+				}
 				this.nextToken = this.getNext();
 				if(this.nextToken.type == "t_closeParen"){
 					// match )
@@ -652,6 +670,24 @@ this.parseBooleanExpr = function(){
 			// match (
 			this.match(this.currentToken);
 			
+		/*	// check if what we have is declared in symbol table
+			var i, j;
+			var isDeclared = false;
+				
+			for(i = this.scope ; i >= 0 ; i--){
+				for(j = 0; j < this.symbolTable[i].length ; j++){
+					if(this.symbolTable[i][j].name == prevToken.tokenValue 
+							|| prevToken.type != "t_digit"
+							|| prevToken.type != "t_string"
+							|| prevToken.type != "t_boolval"){
+						isDeclared = true;
+					}
+				}
+			}
+			if(!isDeclared){
+				this.errors.push("Error: attempting to use variable " + prevToken.tokenValue + " on line " + prevToken.linenumber + " before being declared");
+			}*/
+
 			// we look ahead one token to see if the next is a boolop
 			// if it is we want to add it to the tree first
 			if(this.tokens[this.index+1].type == "t_boolop"){
