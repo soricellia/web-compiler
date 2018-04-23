@@ -227,13 +227,15 @@ function printASTToConsole(programNumber, errors, warnings, ast, symbolTable){
 
 	// print the symbol table
 
-	if(!errors && symbolTable){
+	if(!errors.length > 0 && symbolTable){
 		$('#ast').append('<br />');
 		$('#ast').append('<h3 class ="alert alert-info"> Printing Symbol Table for Program ' + programNumber + '</h3>');
 		$('#ast').append('<h4 class="alert alert-info"> Name | Type | Scope | Line | Initalized </h4>');
 		for(i = 0 ; i < symbolTable.length ; i ++){
 			var j;
 			for(j = 0; j < symbolTable[i].length ; j++){
+				// all this does is prints on the different types using different amount of spaces 
+				// to make it pretty
 				if(symbolTable[i][j].type == "int"){
 					$('#ast').append('<div class="alert alert-info">' + symbolTable[i][j].name 
 						+ '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + symbolTable[i][j].type 
@@ -258,7 +260,12 @@ function printASTToConsole(programNumber, errors, warnings, ast, symbolTable){
 				}
 			}
 		}
-		//error case
+		// print any warnings
+		if(warnings.length > 0){
+			$('#ast').append('<div class ="alert alert-warning">' + warnings[0] + '</div>');
+		} 
+		
+	//error case
 	}else{
 		$('#ast').append('<br />');
 		$('#ast').append('<div class ="alert alert-danger">' + errors[0] + '</div>');

@@ -32,13 +32,15 @@ function SymbolTableElement(name, type, scope, line){
 	this.scope = scope;
 	this.line  = line;
 	this.initalized = false;
+	this.used = false;
 }
 SymbolTableElement.prototype.toString = function symbolTableElementToString(){
 		return this.name + "    " 
 			+ this.type + "    " 
 			+ this.scope + "    " 
 			+ this.line + "     "
-			+ this.initalized;
+			+ this.initalized + "     "
+			+ this.used;
 	}
  
 
@@ -76,10 +78,28 @@ this.parseTokens = function(tokens, done){
 
 	// check for errors
 	if(!this.errors.length > 0){
+
+		// lets check for warnings before we send everything back
+		var i, j;
+		for(i = 0 ; i < this.symbolTable.length ; i++){
+			console.log(this.symbolTable[i]);
+			for(j=0; j< this.symbolTable[i].length ; j++){
+				console.log(this.symbolTable[i][j])
+				console.log(this.symbolTable[i][j].initalized);
+				if(this.symbolTable[i][j].initalized == false){
+					this.warnings.push("Warning: variable " 
+						+ this.symbolTable[i][j].type + " "
+						+ this.symbolTable[i][j].name
+						+ " is declared but unitialized." )
+				}
+			}
+		}
+
 		// we made it here therefore we can just return the completed tree
-		done(null, this.warnings, this.tree.toString(), this.symbolTable);
+		done([], this.warnings, this.tree.toString(), this.symbolTable);
 		
 		// this is for ease of grading
+		console.log(this.warnings);
 		console.log(this.tree.toString());
 		console.log("Symbol Table", this.symbolTable);
 	}
@@ -211,7 +231,6 @@ this.parseStatementList = function(){
 		}
 	
 	}else{
-		console.log("i got an error here");
 		// we have errors
 		// since this is an lambda production, the error had to
 		// have came from somewhere else, so do nothing
@@ -258,16 +277,11 @@ this.parseStatement = function(){
 			this.parseBlock();
 			this.kick();
 			this.scope--;
-			console.log("symbol table after block", this.symbolTable)
-		
+			
 		}
 
 		else{
-			this.errors.push("Error on line " +
-					this.currentToken.linenumber +
-					". Expecting \"print\", \"int\", \"string\", \"boolean\""
-					+ ", \"variable_name\", \"while\", \"if\" or \"{\".");
-		
+			
 		}
 	
 	}else{
@@ -299,63 +313,41 @@ this.parsePrintStatement = function(){
 				var i, j;
 				var isDeclared = false;
 				var prevToken = this.tokens[this.index - 1];
-				
-				for(i = this.scope ; i >= 0 ; i--){
-					for(j = 0; j < this.symbolTable[i].length ; j++){
-						if(this.symbolTable[i][j].name == prevToken.tokenValue 
-							|| prevToken.type != "t_digit"
-							|| prevToken.type != "t_string"
-							|| prevToken.type != "t_boolval"){
-							isDeclared = true;
+				console.log(prevToken);
+				if(prevToken.type == "t_char"){
+					for(i = this.scope ; i >= 0 ; i--){
+						for(j = 0; j < this.symbolTable[i].length ; j++){
+							if(this.symbolTable[i][j].name == prevToken.tokenValue){
+								isDeclared = true;
+							}
 						}
 					}
-				}
-				if(!isDeclared){
-					this.errors.push("Error: attempting to use variable " + prevToken.tokenValue + " on line " + prevToken.linenumber + " before being declared");
+				
+					if(!isDeclared){
+						this.errors.push("Error: attempting to use variable " + prevToken.tokenValue + " on line " + prevToken.linenumber + " before being declared");
+					}
 				}
 				this.nextToken = this.getNext();
 				if(this.nextToken.type == "t_closeParen"){
 					// match )
 					this.match(this.nextToken);
 				}else{
-					// ERROR, missing ) after printexpr
-
-					this.errors.push("Error on line " +
-						this.currentToken.linenumber +
-						". Found " + this.currentToken.tokenValue +
-						" Expecting \")\" after print expr.");
-
-					//smart hint detection
-					if(this.currentToken.type == "t_char"){
-						this.hints.push("Hint: an a print statement looks like print(Expr)."
-							+ "<br /> Ex. print(7 + a) is valid <br />  &nbsp;&nbsp;&nbsp; print(a + 7) is not valid");
-					
-					}
-					else{
-						this.hints.push("Hint: a print statement looks like print(Expr)");
-					
-					}
 
 				}
 			}else{
-				// error, missing ( after print
-				this.errors.push("Error on line " + 
-					this.currentToken.linenumber +
-					". Found "+ this.currentToken.tokenValue + 
-					" Expecting \"(\" after print statement");
-				
+					
 			}
 		}else{
-			this.errors.push("Error expecting print statement");
+			
 		}
 	}else{
 		// preexisting error case, bubble out of recursion	
 	}
 }
 
-/*
+/***************************************
 	AssignmentStatement ::== Id = Expr 
-*/
+****************************************/
 this.parseAssignmentStatement = function(){
 	if(this.errors.length == 0){
 		this.tree.addNode("Assignment Statement", "branch");
@@ -367,10 +359,9 @@ this.parseAssignmentStatement = function(){
 			var isDeclared = false;
 
 			//start at the current scope and try to find the variable
-			console.log("st: ", this.symbolTable);
-			console.log("scope: ", this.scope);
 			for(i = this.scope; i >= 0; i--){
 				for(j = 0; j < this.symbolTable[i].length ; j++){
+					console.log("SYMBOL TABLE " + i, this.symbolTable[i]);
 					if(this.symbolTable[i][j].name == assignVar.tokenValue){
 						this.symbolTable[i][j].initalized = true;
 						j = this.symbolTable[i].length;
@@ -399,43 +390,54 @@ this.parseAssignmentStatement = function(){
 				this.parseExpr();
 
 				// check to make sure we assigned it the correct type
+				var found = false;
 				for(i = this.scope; i >= 0; i--){
 					for(j = 0; j < this.symbolTable[i].length ; j++){
 						if(this.currentToken.type == "t_string"){
-							if(this.symbolTable[i][j].type != "string"
-									&& this.symbolTable[i][j].name == assignVar.tokenValue){
-								this.errors.push("Error: type mismatch."
-									+ " Variable " + this.symbolTable[i][j].name
-									+ " is of type " + this.symbolTable[i][j].type 
-									+ " but is assigned a value of type string");
+							if(this.symbolTable[i][j].name == assignVar.tokenValue){
+								found = true; // stop at the first variable we find
+								if(this.symbolTable[i][j].type != "string"){
+									this.errors.push("Error: type mismatch."
+										+ " Variable " + this.symbolTable[i][j].name
+										+ " on line " + this.symbolTable[i][j].line
+										+ " is of type " + this.symbolTable[i][j].type 
+										+ " but is assigned a value of type string");
+								}
 							}	
 						}
 						else if(this.tokens[this.index-1].type == 't_digit'){
-							if(this.symbolTable[i][j].type != "int"
-									&& this.symbolTable[i][j].name == assignVar.tokenValue){
-								this.errors.push("Error: type mismatch."
-									+ " Variable " + this.symbolTable[i][j].name
-									+ " is of type " + this.symbolTable[i][j].type 
-									+ " but is assigned a value of type int");
-							}
-						}else if(this.tokens[this.index-1].type == 't_boolval'){
-							if(this.symbolTable[i][j].type != "boolean" 
-								&& this.symbolTable[i][j].name == assignVar.tokenValue){
+							if(this.symbolTable[i][j].name == assignVar.tokenValue){
+								found = true;
+								if(this.symbolTable[i][j].type != "int"){
 									this.errors.push("Error: type mismatch."
-									+ " Variable " + this.symbolTable[i][j].name
-									+ " is of type " + this.symbolTable[i][j].type 
-									+ " but is assigned a value of type boolean");
-								
+										+ " Variable " + this.symbolTable[i][j].name
+										+ " on line " + this.symbolTable[i][j].line 
+										+ " is of type " + this.symbolTable[i][j].type 
+										+ " but is assigned a value of type int");
+								}
 							}
+						}
+						else if(this.tokens[this.index-1].type == 't_boolval'){
+							if(this.symbolTable[i][j].name == assignVar.tokenValue){
+								found = true;
+								if(this.symbolTable[i][j].type != "boolean"){
+									this.errors.push("Error: type mismatch."
+										+ " Variable " + this.symbolTable[i][j].name
+										+ " on line " + this.symbolTable[i][j].line
+										+ " is of type " + this.symbolTable[i][j].type 
+										+ " but is assigned a value of type boolean");
+								
+								}
+							}
+						}
+						if(found){
+							// this case is just because i didnt use a while loop and i need to exit my loop
+							j = this.symbolTable[i].length;
+							i = 0;
 						}
 					}
 				}	
 			}else{
-				// error, missing + 
-				this.errors.push("Error on line " +
-					this.currentToken.linenumber +
-					". Found " + this.currentToken.tokenValue +
-					" Expecting \"+\"");
 			
 			}
 		
@@ -467,18 +469,8 @@ this.parseVarDecl = function(){
 
 			stElement.name = this.currentToken.tokenValue;
 			this.symbolTable[this.scope].push(stElement);
-
-			console.log(this.scope);
-			console.log(this.symbolTable);
 		}else{
-			// error, expecting id
-			this.errors.push("Error on line" + 
-				this.currentToken.linenumber +
-				". Found " + this.currentToken.tokenValue +
-				" Expecting Variable ID.");
-
-			this.hints.push(" Hint: An ID is only one character, lowercase [a-z]");
-		
+				
 		}
 
 	}else{
@@ -569,12 +561,7 @@ this.parseExpr = function(){
 
 		}
 		else{
-			if(this.errors.length == 0){
-				this.errors.push("Error on line "+ this.currentToken.linenumber
-					+ ". Found " + this.currentToken.tokenValue + 
-					" Expecting digit,  \"\"\", \"(\", boolval or ID character [a-z]");
 			
-			}
 		
 		}
 		
@@ -632,15 +619,8 @@ this.parseStringExpr = function(){
 		if(this.currentToken.type == "t_string"){
 			this.tree.addNode(this.charList);
 			this.match(this.currentToken);
-		}else{
-			// error, expecting end of string "
-			this.errors.push("Error on line " + 
-				this.currentToken.linenumber + 
-				". Found " + this.currentToken.tokenValue +
-				" Expecting end of string \" character.");
-
-			this.hints.push("Hint: \"xyz\" is a string.");	
 		}
+		
 	}else{
 		// preexisting error case, bubble out of recursion	
 	
@@ -684,7 +664,6 @@ this.parseBooleanExpr = function(){
 			}
 
 			var lookAhead = this.tokens[this.index]; 
-			console.log("LOOK AHEAD ======", lookAhead);
 			// make sure we're not using an undeclared variable
 			if(lookAhead.type == "t_char"){
 				// check if what we have is declared in symbol table
@@ -699,6 +678,7 @@ this.parseBooleanExpr = function(){
 					}
 				}
 				if(!isDeclared){
+					console.log("here1");
 					this.errors.push("Error: attempting to use variable " 
 						+ lookAhead.tokenValue + " on line " 
 						+ lookAhead.linenumber + " before being declared");
@@ -783,14 +763,8 @@ this.parseId = function(){
 			this.match(this.currentToken);	
 		
 		}else{
-			// error, expecting char
-			this.errors.push("Error on line" + 
-					this.currentToken.linenumber +
-					". Found " + this.currentToken.tokenValue +
-					" Expecting ID. Hint: an ID is a single lowercase character [a-z]");	
-		
+			
 		}
-		
 	}
 
 	else{
