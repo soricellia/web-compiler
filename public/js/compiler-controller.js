@@ -262,7 +262,10 @@ function printASTToConsole(programNumber, errors, warnings, ast, symbolTable){
 		}
 		// print any warnings
 		if(warnings.length > 0){
-			$('#ast').append('<div class ="alert alert-warning">' + warnings[0] + '</div>');
+			var i;
+			for(i = 0; i < warnings.length; i ++){
+				$('#ast').append('<div class ="alert alert-warning">' + warnings[i] + '</div>');
+			}
 		} 
 		
 	//error case

@@ -90,7 +90,21 @@ this.parseTokens = function(tokens, done){
 					this.warnings.push("Warning: variable " 
 						+ this.symbolTable[i][j].type + " "
 						+ this.symbolTable[i][j].name
+						+ " in scope " + i 
 						+ " is declared but unitialized." )
+				}if(this.symbolTable[i][j].initalized == false 
+					&& this.symbolTable[i][j].used == true){
+					this.warnings.push("Warning: variable "
+						+ this.symbolTable[i][j].type + " "
+						+ this.symbolTable[i][j].name
+						+ " in scope " + i
+						+ " is used but uninitalized. Variable will be initalized to null");
+				}if(this.symbolTable[i][j].used == false){
+						this.warnings.push("Warning: variable "
+						+ this.symbolTable[i][j].type + " "
+						+ this.symbolTable[i][j].name
+						+ " in scope " + i
+						+ " initalized but unused. Did you forget to use the variable?");
 				}
 			}
 		}
@@ -319,6 +333,7 @@ this.parsePrintStatement = function(){
 						for(j = 0; j < this.symbolTable[i].length ; j++){
 							if(this.symbolTable[i][j].name == prevToken.tokenValue){
 								isDeclared = true;
+								this.symbolTable[i][j].used = true;
 							}
 						}
 					}
@@ -374,7 +389,7 @@ this.parseAssignmentStatement = function(){
 
 			}
 			if(!isDeclared){
-				this.warnings.push("Warning: variable " 
+				this.errors.push("Warning: variable " 
 					+ assignVar.tokenValue + " on line "
 					+ assignVar.linenumber + " is assigned a value but undeclared.");
 			
