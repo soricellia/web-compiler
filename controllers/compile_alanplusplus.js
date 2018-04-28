@@ -1,5 +1,6 @@
 var Parser = require('../compiler_resources/parser');
 var ASTParser = require('../compiler_resources/ast_parser');
+var CodeGenerator = require('../compiler_resources/code_generator.js');
 
 exports.post = function(req, res) {
 	req.on("data", function(data){
@@ -28,6 +29,11 @@ exports.post = function(req, res) {
 					// if there was no errors, go ahead and build an AST
 					if(!responseMessage[i]['parse']['errs']){
 						parseAST(programs[i], responseMessage[i]);
+						if(!responseMessage[i]['ast']['errs']){
+							generateCode(responseMessage[i]['ast']['tree'], 
+								responseMessage[i]['ast']['symbolTable'],
+								responseMessage[i]);
+						}
 					}
 					// if we're done parsing the last program
 					// send it back to the front end
@@ -57,5 +63,14 @@ function parseAST(tokens, responseMessage){
 		responseMessage['ast']['warnings'] = warnings;
 		responseMessage['ast']['tree'] = ast;
 		responseMessage['ast']['symbolTable'] = symbolTable
+	})
+}
+
+function generateCode(AST, symbolTable, responseMessage){
+	var codeGenerator = new CodeGenerator();
+	codeGenerator.generateCode(AST, symbolTable, function(errs, code){
+		responseMessage['codeGen'] = {};
+		responseMessage['codeGen']['errors'] = errors;
+		responseMessage['codeGen']['code'] = code;
 	})
 }

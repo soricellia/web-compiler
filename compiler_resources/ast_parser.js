@@ -34,6 +34,7 @@ function SymbolTableElement(name, type, scope, line){
 	this.initalized = false;
 	this.used = false;
 }
+
 SymbolTableElement.prototype.toString = function symbolTableElementToString(){
 		return this.name + "    " 
 			+ this.type + "    " 
@@ -473,7 +474,11 @@ this.parseVarDecl = function(){
 		this.tree.addNode("Variable Declaration", "branch");
 
 		// create new symbol table element
-		stElement = new SymbolTableElement(null, this.currentToken.tokenValue, this.scope, this.currentToken.linenumber);
+		stElement = new SymbolTableElement(null, 
+			this.currentToken.tokenValue, 
+			this.scope, 
+			this.currentToken.linenumber);
+		
 		//match type
 		this.match(this.currentToken);
 
@@ -483,7 +488,9 @@ this.parseVarDecl = function(){
 			this.parseId();
 
 			stElement.name = this.currentToken.tokenValue;
+			console.log("symbol table before add: ", this.symbolTable);
 			this.symbolTable[this.scope].push(stElement);
+			console.log("symbol table after add: ", this.symbolTable);
 		}else{
 				
 		}
@@ -859,7 +866,8 @@ this.kick = function(){
 
 this.createNewScope = function(){
 	this.scope++;
-	this.symbolTable[this.scope] = [];
+	if(!this.symbolTable[this.scope])
+		this.symbolTable[this.scope] = [];
 }
 
 this.kickScope = function(){
