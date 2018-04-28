@@ -29,7 +29,7 @@ exports.post = function(req, res) {
 					// if there was no errors, go ahead and build an AST
 					if(!responseMessage[i]['parse']['errs']){
 						parseAST(programs[i], responseMessage[i]);
-						if(!responseMessage[i]['ast']['errs']){
+						if(responseMessage[i]['ast']['errs'].length == 0){
 							generateCode(responseMessage[i]['ast']['tree'], 
 								responseMessage[i]['ast']['symbolTable'],
 								responseMessage[i]);
@@ -70,7 +70,7 @@ function generateCode(AST, symbolTable, responseMessage){
 	var codeGenerator = new CodeGenerator();
 	codeGenerator.generateCode(AST, symbolTable, function(errs, code){
 		responseMessage['codeGen'] = {};
-		responseMessage['codeGen']['errors'] = errors;
+		responseMessage['codeGen']['errors'] = errs;
 		responseMessage['codeGen']['code'] = code;
 	})
 }

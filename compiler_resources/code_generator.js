@@ -10,9 +10,7 @@
 	output:
 		return(errors, machine code)
 ***************************************************************/
-var memory = [];
-var statics = [];
-var branches = [];
+
 
 // object that goes in statics 
 var static = function(temp, variable, address){
@@ -29,25 +27,33 @@ var branch = function(temp, dist){
 }
 
 
-function code_generator(){
+function CodeGenerator(){
+	this.memory = [];
+	this.statics = [];
+	this.branches = [];
 	// initalize the memory addresses to all 0's 
 	var i, j;
 	for(i = 0; i < 16 ; i++){
+		this.memory[i] = [];
 		for(j = 0 ; j < 16 ; j++){
-			memory[i][j] = 0;
+			this.memory[i][j] = 0;
 		}
 	}
 
 	// testing
 	this.statics[0] = new static("t0xx", "a", "2F00");
-	this.branchs[0] = new branch("J0", 7);
+	this.branches[0] = new branch("J0", 7);
 	
 	console.log("memory: ", this.memory);
 	console.log("statics: ", this.statics);
 	console.log("branches", this.branches);
 
-	function generateCode(AST, symbolTable){
-
+	/**********************
+		public functions
+	***********************/
+	this.generateCode = function(AST, symbolTable, done){
+		return done(null, "code");
 	}
 }
 
+module.exports = CodeGenerator;

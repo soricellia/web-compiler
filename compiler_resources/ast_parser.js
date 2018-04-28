@@ -83,10 +83,7 @@ this.parseTokens = function(tokens, done){
 		// lets check for warnings before we send everything back
 		var i, j;
 		for(i = 0 ; i < this.symbolTable.length ; i++){
-			console.log(this.symbolTable[i]);
 			for(j=0; j< this.symbolTable[i].length ; j++){
-				console.log(this.symbolTable[i][j])
-				console.log(this.symbolTable[i][j].initalized);
 				if(this.symbolTable[i][j].initalized == false){
 					this.warnings.push("Warning: variable " 
 						+ this.symbolTable[i][j].type + " "
@@ -113,15 +110,9 @@ this.parseTokens = function(tokens, done){
 		// we made it here therefore we can just return the completed tree
 		done([], this.warnings, this.tree.toString(), this.symbolTable);
 		
-		// this is for ease of grading
-		console.log(this.warnings);
-		console.log(this.tree.toString());
-		console.log("Symbol Table", this.symbolTable);
 	}
 	
 	else{
-		console.log(this.tree.toString());
-		console.log(this.errors);
 		// process our errors
 		done(this.errors, this.warnings, this.tree.toString(), null);
 
@@ -328,7 +319,7 @@ this.parsePrintStatement = function(){
 				var i, j;
 				var isDeclared = false;
 				var prevToken = this.tokens[this.index - 1];
-				console.log(prevToken);
+				
 				if(prevToken.type == "t_char"){
 					for(i = this.scope ; i >= 0 ; i--){
 						for(j = 0; j < this.symbolTable[i].length ; j++){
@@ -377,7 +368,6 @@ this.parseAssignmentStatement = function(){
 			//start at the current scope and try to find the variable
 			for(i = this.scope; i >= 0; i--){
 				for(j = 0; j < this.symbolTable[i].length ; j++){
-					console.log("SYMBOL TABLE " + i, this.symbolTable[i]);
 					if(this.symbolTable[i][j].name == assignVar.tokenValue){
 						this.symbolTable[i][j].initalized = true;
 						j = this.symbolTable[i].length;
@@ -487,10 +477,10 @@ this.parseVarDecl = function(){
 		if(this.currentToken.type == "t_char"){
 			this.parseId();
 
+			// add the new variable to the symbol table
 			stElement.name = this.currentToken.tokenValue;
-			console.log("symbol table before add: ", this.symbolTable);
 			this.symbolTable[this.scope].push(stElement);
-			console.log("symbol table after add: ", this.symbolTable);
+
 		}else{
 				
 		}
@@ -700,7 +690,6 @@ this.parseBooleanExpr = function(){
 					}
 				}
 				if(!isDeclared){
-					console.log("here1");
 					this.errors.push("Error: attempting to use variable " 
 						+ lookAhead.tokenValue + " on line " 
 						+ lookAhead.linenumber + " before being declared");
