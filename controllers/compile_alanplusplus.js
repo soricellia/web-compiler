@@ -70,7 +70,7 @@ function generateCode(AST, symbolTable, responseMessage){
 	var codeGenerator = new CodeGenerator();
 	codeGenerator.generateCode(AST, symbolTable, function(errs, code){
 		responseMessage['codeGen'] = {};
-		responseMessage['codeGen']['errors'] = errs;
+		responseMessage['codeGen']['errs'] = errs;
 		responseMessage['codeGen']['code'] = code;
 	})
 }

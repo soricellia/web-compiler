@@ -60,6 +60,11 @@ $(document).ready(function(){
 						compileResults[i]['ast']['warnings'], 
 						compileResults[i]['ast']['tree'], 
 						compileResults[i]['ast']['symbolTable']);
+
+					// print code to console
+					printCodeToConsole(i+1,
+						compileResults[i]['codeGen']['errs'],
+						compileResults[i]['codeGen']['code']);
 				}
 			});
 		}
@@ -277,6 +282,21 @@ function printASTToConsole(programNumber, errors, warnings, ast, symbolTable){
 	$('#consoleContent')[0].scrollTop = $('#consoleContent')[0].scrollHeight;
 
 	document.getElementsByClassName('consoleTab')[2].click();
+}
+
+function printCodeToConsole(programNumber, errors, code){
+	$('#codeGen').append('<h3 class="alert alert-info">Printing Code Generated for program '+ programNumber + '</h3>');
+	
+	//print errors
+	if(errors){
+		$('#codeGen').append('<div class ="alert alert-danger">' + errors[0] + '</div>');
+	}
+	else{ // print teh code
+		$('#codeGen').append('<div class="alert alert-info">' + code + '</div>');
+	}
+	
+	$('#consoleContent')[0].scrollTop = $('#consoleContent')[0].scrollHeight;	
+	document.getElementsByClassName('consoleTab')[3].click();
 }
 
 /**********************************

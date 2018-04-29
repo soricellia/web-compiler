@@ -52,7 +52,7 @@ function CodeGenerator(){
 		public functions
 	***********************/
 	this.generateCode = function(AST, symbolTable, done){
-		return done(null, "code");
+		return done(["error"], "code");
 	}
 }
 
