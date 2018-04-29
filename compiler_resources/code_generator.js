@@ -3,7 +3,6 @@
 	Input: AST that represents the a++ language. 
 		   Symbol Table
 
-		
 		Purpose:
 			Translates the AST and symbol table into 6502 machine code
 		
@@ -11,6 +10,41 @@
 		return(errors, machine code)
 ***************************************************************/
 
+// Op codes
+var loadAccWithConst = "A9";
+var loadAccFromMem = "AD";
+
+var storeAccInMem = "8D";
+
+var addWithCarry = "6D";
+
+var loadXRegWithConst = "A2";
+var loadXRegFromMem = "AE";
+
+var loadYRegWithConst = "A0";
+var loadYRegFromMem = "AC";
+
+var noOp = "EA";
+
+var compareMemToXReg = "EC";
+
+var branchIfEqual = "D0";
+
+var incrementByte = "EE";
+
+var sysCall = "FF";
+
+// memory pointers
+var codeStartX = 0;
+var codeStartY;
+
+var staticVarStart;
+var staticVarEnd;
+
+var heapStart;
+var heapEnd;
+
+var currentMemLoc;
 
 // object that goes in statics 
 var static = function(temp, variable, address){
@@ -28,9 +62,12 @@ var branch = function(temp, dist){
 
 
 function CodeGenerator(){
+	// our data structures for code generation
 	this.memory = [];
 	this.statics = [];
 	this.branches = [];
+	this.errors = [];
+
 	// initalize the memory addresses to all 0's 
 	var i, j;
 	for(i = 0; i < 16 ; i++){
@@ -40,7 +77,7 @@ function CodeGenerator(){
 		}
 	}
 
-	// testing
+	// testing data structures
 	this.statics[0] = new static("t0xx", "a", "2F00");
 	this.branches[0] = new branch("J0", 7);
 	
@@ -111,7 +148,9 @@ function CodeGenerator(){
 		}		
 	  	
 
-        return done(["error"], "code");
+
+		//we're finished, return our code
+        return done(this.errors, this.memory);
 
         function traverseBlock(node, depth) {
         	// Continues the traversal
@@ -167,7 +206,7 @@ function CodeGenerator(){
                 traverseTree(node[i], depth + 1);
             }	
         }
-        function traverseNoTEquals(node, depth){
+        function traverseNotEquals(node, depth){
         	console.log("Generating Code For Not Equals");
         	for (var i = 0; i < node.length; i++) {
                 traverseTree(node[i], depth + 1);
