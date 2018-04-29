@@ -60,6 +60,11 @@ $(document).ready(function(){
 						compileResults[i]['ast']['warnings'], 
 						compileResults[i]['ast']['tree'], 
 						compileResults[i]['ast']['symbolTable']);
+
+					// print code to console
+					printCodeToConsole(i+1,
+						compileResults[i]['codeGen']['errs'],
+						compileResults[i]['codeGen']['code']);
 				}
 			});
 		}
@@ -227,13 +232,15 @@ function printASTToConsole(programNumber, errors, warnings, ast, symbolTable){
 
 	// print the symbol table
 
-	if(!errors && symbolTable){
+	if(!errors.length > 0 && symbolTable){
 		$('#ast').append('<br />');
 		$('#ast').append('<h3 class ="alert alert-info"> Printing Symbol Table for Program ' + programNumber + '</h3>');
 		$('#ast').append('<h4 class="alert alert-info"> Name | Type | Scope | Line | Initalized </h4>');
 		for(i = 0 ; i < symbolTable.length ; i ++){
 			var j;
 			for(j = 0; j < symbolTable[i].length ; j++){
+				// all this does is prints on the different types using different amount of spaces 
+				// to make it pretty
 				if(symbolTable[i][j].type == "int"){
 					$('#ast').append('<div class="alert alert-info">' + symbolTable[i][j].name 
 						+ '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + symbolTable[i][j].type 
@@ -258,10 +265,38 @@ function printASTToConsole(programNumber, errors, warnings, ast, symbolTable){
 				}
 			}
 		}
+		// print any warnings
+		if(warnings.length > 0){
+			var i;
+			for(i = 0; i < warnings.length; i ++){
+				$('#ast').append('<div class ="alert alert-warning">' + warnings[i] + '</div>');
+			}
+		} 
+		
+	//error case
+	}else{
+		$('#ast').append('<br />');
+		$('#ast').append('<div class ="alert alert-danger">' + errors[0] + '</div>');
+		$('#ast').append('<div class ="alert alert-warning"> Ommitting Symbol Table because errors found.</div>');
 	}
 	$('#consoleContent')[0].scrollTop = $('#consoleContent')[0].scrollHeight;
 
 	document.getElementsByClassName('consoleTab')[2].click();
+}
+
+function printCodeToConsole(programNumber, errors, code){
+	$('#codeGen').append('<h3 class="alert alert-info">Printing Code Generated for program '+ programNumber + '</h3>');
+	
+	//print errors
+	if(errors){
+		$('#codeGen').append('<div class ="alert alert-danger">' + errors[0] + '</div>');
+	}
+	else{ // print teh code
+		$('#codeGen').append('<div class="alert alert-info">' + code + '</div>');
+	}
+	
+	$('#consoleContent')[0].scrollTop = $('#consoleContent')[0].scrollHeight;	
+	document.getElementsByClassName('consoleTab')[3].click();
 }
 
 /**********************************
