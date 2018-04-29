@@ -38,7 +38,9 @@ exports.post = function(req, res) {
 					// if we're done parsing the last program
 					// send it back to the front end
 					if((i+1) == programs.length){
-						responseMessage[i]['ast']['tree'] = null;
+						if(responseMessage[i]['ast']){
+							responseMessage[i]['ast']['tree'] = null;
+						}
 						res.send(JSON.stringify(responseMessage));
 					}
 				});

@@ -288,11 +288,29 @@ function printCodeToConsole(programNumber, errors, code){
 	$('#codeGen').append('<h3 class="alert alert-info">Printing Code Generated for program '+ programNumber + '</h3>');
 	
 	//print errors
-	if(errors){
+	if(errors.length > 0){
 		$('#codeGen').append('<div class ="alert alert-danger">' + errors[0] + '</div>');
 	}
 	else{ // print teh code
-		$('#codeGen').append('<div class="alert alert-info">' + code + '</div>');
+		var i, j, codeString;
+		codeString = "";
+		for(i = 0 ; i < code.length ; i++){
+			//now lets build a nice string of machine code
+			for(j = 0; j < code[i].length; j++){
+				codeString += code[i][j];
+
+				// no trailing spaces
+				if(j != code[i].length-1){ 
+					codeString += " " 
+				}
+			}
+			
+			codeString += "<br />"; // add new line for pretty formatt
+		}
+		// now print our machine code
+		$('#codeGen').append('<div class="alert alert-info">'
+			 + codeString 
+			 + '</div>');
 	}
 	
 	$('#consoleContent')[0].scrollTop = $('#consoleContent')[0].scrollHeight;	
