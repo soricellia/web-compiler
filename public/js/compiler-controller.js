@@ -58,7 +58,7 @@ $(document).ready(function(){
 					printASTToConsole(i+1, 
 						compileResults[i]['ast']['errs'], 
 						compileResults[i]['ast']['warnings'], 
-						compileResults[i]['ast']['tree'], 
+						compileResults[i]['ast']['treeToString'], 
 						compileResults[i]['ast']['symbolTable']);
 
 					// print code to console
@@ -386,6 +386,7 @@ function switchTab(evt, tabId){
 	document.getElementById('parse').style.display = "none";
 	document.getElementById('ast').style.display = "none";
 	document.getElementById('lex').style.display = "none";
+	document.getElementById('codeGen').style.display = "none";
 	
 	//get all the tabs and make sure none of them are selected
 	tablinks = document.getElementsByClassName("consoleTab");

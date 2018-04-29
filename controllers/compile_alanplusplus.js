@@ -38,6 +38,7 @@ exports.post = function(req, res) {
 					// if we're done parsing the last program
 					// send it back to the front end
 					if((i+1) == programs.length){
+						responseMessage[i]['ast']['tree'] = null;
 						res.send(JSON.stringify(responseMessage));
 					}
 				});
@@ -55,15 +56,16 @@ exports.post = function(req, res) {
 	});
 };
 
-function parseAST(tokens, responseMessage){
+function parseAST(tokens, responseMessage, ast){
 	var astParser = new ASTParser(true);
-	astParser.parseTokens(tokens, function(errs, warnings, ast, symbolTable){
+	astParser.parseTokens(tokens, function(errs, warnings, astToString, symbolTable, ast){
 		responseMessage['ast'] = {};
 		responseMessage['ast']['errs'] = errs;
 		responseMessage['ast']['warnings'] = warnings;
+		responseMessage['ast']['treeToString'] = astToString;
+		responseMessage['ast']['symbolTable'] = symbolTable;
 		responseMessage['ast']['tree'] = ast;
-		responseMessage['ast']['symbolTable'] = symbolTable
-	})
+	});
 }
 
 function generateCode(AST, symbolTable, responseMessage){
