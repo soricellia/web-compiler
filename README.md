@@ -1,17 +1,5 @@
 # Web Compiler
 
-# a note to the prof
-
-Hi prof, 
-
-
-im still working as youre reading this so if you can wait to grade me so i dont fail the course that would be fantastic. 
-
-
-Thanks,
-  tony
-
-
 ## Stack information
 
 Currently, my stack is set up as follows:
