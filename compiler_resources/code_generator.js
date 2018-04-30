@@ -236,20 +236,36 @@ function CodeGenerator(){
         	//lookup variable in statics and assign it a value
         	assignStaticsVariable(scope, node.children[0].name, node.children[1].name);
         	
+        	if(isNumeric(node.children[1].name)){
+        		//load accumulator with constant
+        		memory[currentMemLocX][currentMemLocY] = loadAccWithConst;
+				incrementMemY();
+	
 
-        	//load accumulator with constant
-        	memory[currentMemLocX][currentMemLocY] = loadAccWithConst;
-        	incrementMemY();
-
-        	// check whether to 0 pad or not
-        	if(node.children[1].name.toString(16).length < 2){ 
-        		memory[currentMemLocX][currentMemLocY] = "0" + node.children[1].name.toString(16);
-        		
-        	}else{
-        		memory[currentMemLocX][currentMemLocY] = node.children[1].name.toString(16);
-        		
+	        	// check whether to 0 pad or not
+	        	if(node.children[1].name.toString(16).length < 2){ 
+	        		memory[currentMemLocX][currentMemLocY] = "0" + node.children[1].name.toString(16);
+	        		
+	        	}else{
+	        		memory[currentMemLocX][currentMemLocY] = node.children[1].name.toString(16);
+	        		
+	        	}
+	        	incrementMemY();        		
         	}
-        	incrementMemY();
+        	else{
+        		//load accumulator from memory
+        		memory[currentMemLocX][currentMemLocY] = loadAccFromMem;
+				incrementMemY();
+
+				//temp address
+				memory[currentMemLocX][currentMemLocY] = lookUpStaticsVariable(scope, node.children[1].name).temp;
+				incrementMemY();
+
+				memory[currentMemLocX][currentMemLocY] = "xx";
+				incrementMemY();       			
+        	}
+
+        	
 
         	//store accumlator in memory
         	var temp = lookUpStaticsVariable(scope, node.children[0].name).temp;
@@ -420,6 +436,12 @@ function CodeGenerator(){
     			incrementMemY();
         	}
         }
+
+        // helper function to determine if something is a number or not
+        function isNumeric(n) {
+ 			 return !isNaN(parseFloat(n)) && isFinite(n);
+		}
+
         function clearCodeGenerator(){
 			// initalize the memory addresses to all 0's 
 			var i, j;
