@@ -108,7 +108,7 @@ this.parseTokens = function(tokens, done){
 		}
 
 		// we made it here therefore we can just return the completed tree
-		done([], this.warnings, this.tree.toString(), this.symbolTable, this.tree);
+		done(this.errors, this.warnings, this.tree.toString(), this.symbolTable, this.tree);
 		
 	}
 	

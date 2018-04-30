@@ -54,17 +54,24 @@ $(document).ready(function(){
 						compileResults[i]['parse']['verbose'], 
 						compileResults[i]['parse']['tree']);
 
-					// print to ast console
-					printASTToConsole(i+1, 
-						compileResults[i]['ast']['errs'], 
-						compileResults[i]['ast']['warnings'], 
-						compileResults[i]['ast']['treeToString'], 
-						compileResults[i]['ast']['symbolTable']);
+					if(!compileResults[i]['parse']['errs']){
+						
+						// print to ast console
+						printASTToConsole(i+1, 
+							compileResults[i]['ast']['errs'], 
+							compileResults[i]['ast']['warnings'], 
+							compileResults[i]['ast']['treeToString'], 
+							compileResults[i]['ast']['symbolTable']);
+						
+						if(compileResults[i]['ast']['errs'].length == 0){
 
-					// print code to console
-					printCodeToConsole(i+1,
-						compileResults[i]['codeGen']['errs'],
-						compileResults[i]['codeGen']['code']);
+							// print code to console
+							printCodeToConsole(i+1,
+								compileResults[i]['codeGen']['errs'],
+								compileResults[i]['codeGen']['code']);		
+						}
+					}
+					
 				}
 			});
 		}
