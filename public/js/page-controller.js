@@ -304,11 +304,11 @@ function printCodeToConsole(programNumber, errors, code){
 					codeString += " " 
 				}
 			}
-			
+
 			codeString += "<br />"; // add new line for pretty formatt
 		}
 		// now print our machine code
-		$('#codeGen').append('<div class="alert alert-info">'
+		$('#codeGen').append('<div class="alert alert-success">'
 			 + codeString 
 			 + '</div>');
 	}
