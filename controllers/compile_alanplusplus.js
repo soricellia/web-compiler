@@ -28,11 +28,14 @@ exports.post = function(req, res) {
 
 					// if there was no errors, go ahead and build an AST
 					if(!responseMessage[i]['parse']['errs']){
+						console.log("program: ", i);
 						parseAST(programs[i], responseMessage[i]);
 						if(responseMessage[i]['ast']['errs'].length == 0){
 							generateCode(responseMessage[i]['ast']['tree'], 
 								responseMessage[i]['ast']['symbolTable'],
 								responseMessage[i]);
+							// now erase the tree from the response
+							responseMessage[i]['ast']['tree'] = [];
 						}
 					}
 					// if we're done parsing the last program

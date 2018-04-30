@@ -43,8 +43,9 @@ var codeStartY;
 var staticVarStart;
 var staticVarEnd;
 
-var heapStart;
-var heapEnd;
+// we start the heap at the end of our program stack
+var heapPointerX = 15;
+var heapPointerY = 15;
 
 var currentMemLocX = 0;
 var currentMemLocY = 0;
@@ -91,12 +92,12 @@ function CodeGenerator(){
 	}
 
 	// testing data structures
-	statics[0] = new static("t0xx", "a", "2F00");
-	branches[0] = new branch("J0", 7);
+	//statics[0] = new static("t0xx", "a", "2F00");
+	//branches[0] = new branch("J0", 7);
 	
-	console.log("memory: ", memory);
-	console.log("statics: ", statics);
-	console.log("branches", branches);
+	//console.log("memory: ", memory);
+	//console.log("statics: ", statics);
+	//console.log("branches", branches);
 
 	/**********************
 		public functions
@@ -108,6 +109,10 @@ function CodeGenerator(){
 		clearCodeGenerator();
 
 		traverseTree(astRoot, depth);
+
+		// we're at the end of the code, so add a break
+		memory[currentMemLocX][currentMemLocY] = "00";
+		incrementMemY();
 
 		// we increment our memory to mark the start of the static variables
 		incrementMemY();
@@ -188,45 +193,49 @@ function CodeGenerator(){
         	console.log("Generating Code For Var Decl");
 
         	// 3 cases to worry about, int, boolean or string
+        	if(node.children[0].name == "string"){
+        		// put it into the statics table for referencing later
+        		var stringInSymTable = lookUpSymbolTableVariable(scope, node.children[1].name);
+        		var temp = "T" + staticsPointer;
+				var staticVar = new static(temp,  
+					stringInSymTable ,
+					"");
+				statics[staticsPointer] = staticVar;
+				staticsPointer++;
 
-        			
-        	if(node.children[0].name == "int"){
-        			//load the acc with the int
-        			memory[currentMemLocX][currentMemLocY] = loadAccWithConst;
-        			incrementMemY();
+        	}else{
 
-        			// now get the variable from the symbol table and lets add it to the statics table
-        			var symbolTableVariable = lookUpSymbolTableVariable(scope, node.children[1].name);
-        			
-        			var temp = "T" + staticsPointer;
-        			var staticVar = new static(temp,  
-        					symbolTableVariable ,
-        					"");
-        			
-        			statics[staticsPointer] = staticVar;
-        			staticsPointer++;
-        			
-        			// now default the value to 0 till we assign it something
-        			memory[currentMemLocX][currentMemLocY] = nullTerminate;
-       				incrementMemY();
+				//load the acc with the int
+				memory[currentMemLocX][currentMemLocY] = loadAccWithConst;
+				incrementMemY();
 
-       				// store accumulator in memory
-       				memory[currentMemLocX][currentMemLocY] = storeAccInMem;
-       				incrementMemY();
+				// now get the variable from the symbol table and lets add it to the statics table
+				var symbolTableVariable = lookUpSymbolTableVariable(scope, node.children[1].name);
+				
+				var temp = "T" + staticsPointer;
+				var staticVar = new static(temp,  
+						symbolTableVariable ,
+						"");
+				
+				statics[staticsPointer] = staticVar;
+				staticsPointer++;
 
-       				memory[currentMemLocX][currentMemLocY] = temp; 
-       				incrementMemY();
+				// now default the value to 0 till we assign it something
+				memory[currentMemLocX][currentMemLocY] = nullTerminate;
+				incrementMemY();
 
-       				memory[currentMemLocX][currentMemLocY] = "xx";
-       				incrementMemY();
+				// store accumulator in memory
+				memory[currentMemLocX][currentMemLocY] = storeAccInMem;
+				incrementMemY();
 
+				memory[currentMemLocX][currentMemLocY] = temp; 
+				incrementMemY();
+
+				memory[currentMemLocX][currentMemLocY] = "xx";
+				incrementMemY();
+	
         	}
-        	else if(node.children[i].name == "boolean"){
-
-       		}
-       		else{ // string case
-
-       		}
+        	
         }
 
         function traverseAssign(node, depth){
@@ -234,8 +243,12 @@ function CodeGenerator(){
         	console.log("Generating Code For Assignment");
         	
         	//lookup variable in statics and assign it a value
-        	assignStaticsVariable(scope, node.children[0].name, node.children[1].name);
+        	//assignStaticsVariable(scope, node.children[0].name, node.children[1].name);
         	
+        	//lets figure out what were assigning
+        	var assignVar = lookUpStaticsVariable(scope, node.children[0].name);
+        	
+        	// diffrentiating assigning variable a constant or another variable
         	if(isNumeric(node.children[1].name)){
         		//load accumulator with constant
         		memory[currentMemLocX][currentMemLocY] = loadAccWithConst;
@@ -253,16 +266,36 @@ function CodeGenerator(){
 	        	incrementMemY();        		
         	}
         	else{
-        		//load accumulator from memory
-        		memory[currentMemLocX][currentMemLocY] = loadAccFromMem;
-				incrementMemY();
+        		if(assignVar.variable.type == "string"){
+        			// were dealing with assigning a string
+        			
+        			//write to the heap and keep track of start address to where we put it
+        			var stringPointer = writeToHeap(node.children[1].name);
 
-				//temp address
-				memory[currentMemLocX][currentMemLocY] = lookUpStaticsVariable(scope, node.children[1].name).temp;
-				incrementMemY();
+        			// now store the static pointer
 
-				memory[currentMemLocX][currentMemLocY] = "xx";
-				incrementMemY();       			
+        			//load acc with const (the string pointer address)
+        			memory[currentMemLocX][currentMemLocY] = loadAccWithConst;
+        			incrementMemY();
+
+        			memory[currentMemLocX][currentMemLocY] = stringPointer;
+        			incrementMemY();
+
+        		}
+        		else{
+        			// were dealing with assigning a variable to another variable
+
+	        		//load accumulator from memory
+	        		memory[currentMemLocX][currentMemLocY] = loadAccFromMem;
+					incrementMemY();
+
+					//temp address
+					memory[currentMemLocX][currentMemLocY] = lookUpStaticsVariable(scope, node.children[1].name).temp;
+					incrementMemY();
+
+					memory[currentMemLocX][currentMemLocY] = "xx";
+					incrementMemY();
+				}       			
         	}
 
         	
@@ -284,19 +317,31 @@ function CodeGenerator(){
         function traversePrint(node, depth){
         	console.log("Generating Code For Print");
 
+        	var printVal = lookUpStaticsVariable(scope, node.children[0].name);
+        	
         	// load x reg with constant
         	memory[currentMemLocX][currentMemLocY] = loadXRegWithConst;
         	incrementMemY();
 
-        	memory[currentMemLocX][currentMemLocY] = "01" //loading x register with 01 tells the syscall to print
-        	incrementMemY();
+        	// $01 in x reg = print integer stored in the y reg
+        	// $02 in x reg = print the 00-terminated string in y reg
 
+        	console.log("printVal: ", printVal);
+        	if(printVal.variable.type == "string"){
+        		memory[currentMemLocX][currentMemLocY] = "02" //loading x register with 01 tells the syscall to print
+	        	incrementMemY();
+
+        	}else{
+        		memory[currentMemLocX][currentMemLocY] = "01" //loading x register with 01 tells the syscall to print
+        		incrementMemY();
+	
+        	}
+        	
         	// load the y reg from memory
         	memory[currentMemLocX][currentMemLocY] = loadYRegFromMem;
         	incrementMemY();
 
-        	var printVal = lookUpStaticsVariable(scope, node.children[0].name).temp;
-        	memory[currentMemLocX][currentMemLocY] = printVal;
+        	memory[currentMemLocX][currentMemLocY] = printVal.temp;
         	incrementMemY();
 
         	memory[currentMemLocX][currentMemLocY] = "xx";
@@ -365,12 +410,12 @@ function CodeGenerator(){
         	for(i = scope; i >= 0; i--){
         		for(j = 0; j < symbolTable[i].length; j++){
         			if(symbolTable[i][j].name == variable){
-        				returnVal = symbolTable[i][j];
+        				return symbolTable[i][j];
         			}
         		}
         	}
-
-        	return returnVal;
+        	//console.log("returnval: ", returnVal);
+        	//return returnVal;
         }
 
         function lookUpStaticsVariable(scope, variable){
@@ -428,6 +473,30 @@ function CodeGenerator(){
         	}
         }
 
+        function writeToHeap(variable){
+        	//we're going to start from the back of the heap and work our way up
+        	
+        	// first we null terminate
+        	memory[heapPointerX][heapPointerY] = nullTerminate;
+        	incrementHeapPointers();
+
+        	var i, returnPointers;
+        	for(i = variable.length-1 ; i != -1 ; i--){
+        		// take the char and put it on the heap
+        		if(i == 0){
+        			// if were at the last character in the string store the pointers to it
+        			returnPointers = [heapPointerX, heapPointerY];
+        		}
+        		memory[heapPointerX][heapPointerY] = variable.charCodeAt(i).toString(16).toUpperCase();
+        		incrementHeapPointers();
+        	}
+        	// we have to return WHERE the thing is in memory, but were 1 cell ahead
+
+        	// now we return the address in hex
+        	return returnPointers[0].toString(16).toUpperCase() 
+        			+ returnPointers[1].toString(16).toUpperCase();
+        }
+
         // goes through the statics table and assigns them all an address
         function getIntAddresses(){
         	var i;
@@ -458,6 +527,20 @@ function CodeGenerator(){
 			jumpPointer = 0;
 			statics = [];
 			branches = [];
+			heapPointerX = 15;
+			heapPointerY = 15;
+        }
+        function incrementHeapPointers(){
+        	heapPointerY--;
+        	if(heapPointerY == -1){
+        		heapPointerY = 15
+        		heapPointerX--;
+        	}
+
+        	//make sure we dont have a collision
+        	if(heapPointerX == currentMemLocX && heapPointerY == currentMemLocY){
+        		errors.push("Heap bled into program stack. This means the program is probably too large, or im a bad programmer.");
+        	}
         }
 	}
 }
