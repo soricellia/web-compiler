@@ -57,7 +57,7 @@ var memory = [];
 var statics = [];
 var branches = [];
 var errors = [];
-var scope = -1;
+var scope = -1; // scope will be 0 on first block {scope 0} scope-1
 var symbolTable = [];
 
 
@@ -109,6 +109,7 @@ function CodeGenerator(){
 
 		traverseTree(astRoot, depth);
 
+		// we increment our memory to mark the start of the static variables
 		incrementMemY();
 		staticVarStart = [currentMemLocX, currentMemLocY];
 
@@ -266,9 +267,29 @@ function CodeGenerator(){
         
         function traversePrint(node, depth){
         	console.log("Generating Code For Print");
-        	for (var i = 0; i < node.length; i++) {
-                traverseTree(node[i], depth + 1);
-            }
+
+        	// load x reg with constant
+        	memory[currentMemLocX][currentMemLocY] = loadXRegWithConst;
+        	incrementMemY();
+
+        	memory[currentMemLocX][currentMemLocY] = "01" //loading x register with 01 tells the syscall to print
+        	incrementMemY();
+
+        	// load the y reg from memory
+        	memory[currentMemLocX][currentMemLocY] = loadYRegFromMem;
+        	incrementMemY();
+
+        	var printVal = lookUpStaticsVariable(scope, node.children[0].name).temp;
+        	memory[currentMemLocX][currentMemLocY] = printVal;
+        	incrementMemY();
+
+        	memory[currentMemLocX][currentMemLocY] = "xx";
+        	incrementMemY();
+
+        	//syscall
+        	memory[currentMemLocX][currentMemLocY] = sysCall;
+        	incrementMemY();
+
         }
         
         function traverseIf(node, depth){
@@ -340,7 +361,6 @@ function CodeGenerator(){
         	// first find the variable in the symbol table
         	// for speed were going to do a little cheat and make the object into JSON
         	// this allows us to compare objects ;D
-        	
         	var symbTableVar = JSON.stringify(lookUpSymbolTableVariable(scope, variable));
 
         	//now we look for the symbTableVar in statics and return it
