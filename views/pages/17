@@ -1,0 +1,37 @@
+/********************
+*  Testing strings  *
+********************/
+{
+  string b
+  b = "tony"
+  {
+    string b
+    b = "alan"
+    print(b)
+  }
+  print(b)
+}$
+
+{
+  string b
+  b = "abc"
+  b = "cde"
+  print(b)
+}$
+
+{
+	string a
+	a = "swapme"
+	string b
+	b = "nome"
+	a = b
+	b = a
+	print(a)
+	print(b)
+	{
+		b = "swapmetwo"
+		a = "nomethree"
+		print(a)
+	}
+	print(b)
+}$

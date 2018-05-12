@@ -1,13 +1,33 @@
-/****************
-* variable swaps
-****************/
+/*******************
+*   testing ints   *
+********************/
+{
+	int a
+	a = 5
+	print(a)
+}$
 
 {
-  int a
-  a = 3
-  int b
-  b = 4
-  b = a
-  a = b
-  print(a)
+	int a
+	a = 3
+	int b
+	b = 4
+	b = a
+	a = b
+	print(a)
 }
+
+{
+	int a
+	a = 2
+	{
+		int a
+		a = 3
+		{
+			a = 4
+			print(a)
+		}
+		print(a)
+	}
+	print(a)		
+}$
