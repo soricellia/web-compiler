@@ -1,0 +1,26 @@
+{
+	boolean b
+	b = true
+	print(b)
+}$
+
+{
+	boolean c
+	boolean b
+	b = true
+	c = false
+	print(b)
+	print(c)
+	c = b
+	print(c)
+}$
+
+{
+	boolean d
+	d = true
+	{
+		d = false
+		print(d)
+	}
+	print(d)
+}$

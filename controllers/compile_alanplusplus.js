@@ -18,6 +18,11 @@ exports.post = function(req, res) {
 		for(i = 0 ; i < programs.length ; i++){
 			// if there was no program then that means there is a lex error
 			if(programs[i]){
+				responseMessage[i] = {};
+				responseMessage[i]['parse'] = {}
+				responseMessage[i]['ast'] = {}
+				responseMessage[i]['codeGen'] = {}
+				responseMessage[i]['codeGen']['code'] = {};
 				parser.parseTokens(programs[i], function(errs, hints, verboseMessages, parseTree){
 					responseMessage[i] = {};
 					responseMessage[i]['parse'] = {}
@@ -28,16 +33,16 @@ exports.post = function(req, res) {
 
 					// if there was no errors, go ahead and build an AST
 					if(!responseMessage[i]['parse']['errs']){
-						console.log("program: ", i);
 						parseAST(programs[i], responseMessage[i]);
+
 						if(responseMessage[i]['ast']['errs'].length == 0){
-							generateCode(responseMessage[i]['ast']['tree'], 
-								responseMessage[i]['ast']['symbolTable'],
-								responseMessage[i]);
+							generateCode(responseMessage[i]['ast']['tree'], responseMessage[i]['ast']['symbolTable'], responseMessage[i]);
+							
 							// now erase the tree from the response
 							responseMessage[i]['ast']['tree'] = [];
 						}
 					}
+
 					// if we're done parsing the last program
 					// send it back to the front end
 					if((i+1) == programs.length){
@@ -47,9 +52,8 @@ exports.post = function(req, res) {
 						res.send(JSON.stringify(responseMessage));
 					}
 				});
-
-				//console.log(responseMessage);
-			}else{
+			}
+			else{ // there is an error in lex
 				responseMessage[i] = {};
 				responseMessage[i]['parse'] = {}
 				responseMessage[i]['parse']['errs'] = ["Failed to Lex -- Ignoring Program"];
@@ -75,9 +79,11 @@ function parseAST(tokens, responseMessage, ast){
 
 function generateCode(AST, symbolTable, responseMessage){
 	var codeGenerator = new CodeGenerator();
+	if(!responseMessage['codeGen']){	
 	codeGenerator.generateCode(AST, symbolTable, function(errs, code){
 		responseMessage['codeGen'] = {};
 		responseMessage['codeGen']['errs'] = errs;
 		responseMessage['codeGen']['code'] = code;
 	})
+}
 }

@@ -15,7 +15,7 @@
 	b = a
 	a = b
 	print(a)
-}
+}$
 
 {
 	int a
