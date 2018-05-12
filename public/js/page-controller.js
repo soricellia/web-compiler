@@ -180,8 +180,6 @@ function printParseToConsole(programNumber, errors, hints, verboseMessages, pars
 		}
 	}
 
-	$('#parse').append("<br />");
-
 	//print errors and hints	
 	if( errors && errors.length > 0){
 		$('#parse').append("<div class=\"alert alert-danger\">"+errors[0]+"</div>");
@@ -213,10 +211,11 @@ function printParseToConsole(programNumber, errors, hints, verboseMessages, pars
 			$('#parse').append("<div class=\"alert alert-success\" id=\"parseTree" + (i+programNumber*10000) + "\"></div>");
 			$('#parseTree' + (i+programNumber*10000)).text(tree[i]); 	
 		}
-		$('#parse').append('<h3 class="alert alert-success">Program ' + programNumber + ' Parsed Successfully');
+		$('#parse').append('<h3 class="alert alert-success">Program ' + programNumber + ' Parsed Successfully</h3>');
 
 	}
 
+	$('#parse').append("<br />");
 	$('#consoleContent')[0].scrollTop = $('#consoleContent')[0].scrollHeight;
 
 	document.getElementsByClassName('consoleTab')[1].click();
@@ -240,7 +239,6 @@ function printASTToConsole(programNumber, errors, warnings, ast, symbolTable){
 	// print the symbol table
 
 	if(!errors.length > 0 && symbolTable){
-		$('#ast').append('<br />');
 		$('#ast').append('<h3 class ="alert alert-info"> Printing Symbol Table for Program ' + programNumber + '</h3>');
 		$('#ast').append('<h4 class="alert alert-info"> Name | Type | Scope | Line | Initalized </h4>');
 		for(i = 0 ; i < symbolTable.length ; i ++){
@@ -286,6 +284,7 @@ function printASTToConsole(programNumber, errors, warnings, ast, symbolTable){
 		$('#ast').append('<div class ="alert alert-danger">' + errors[0] + '</div>');
 		$('#ast').append('<div class ="alert alert-warning"> Ommitting Symbol Table because errors found.</div>');
 	}
+	$('#ast').append('<br />');
 	$('#consoleContent')[0].scrollTop = $('#consoleContent')[0].scrollHeight;
 
 	document.getElementsByClassName('consoleTab')[2].click();
@@ -319,7 +318,9 @@ function printCodeToConsole(programNumber, errors, code){
 			 + codeString 
 			 + '</div>');
 	}
-	
+	//print a line break for pretty output
+	$('#codeGen').append("<br />");
+
 	$('#consoleContent')[0].scrollTop = $('#consoleContent')[0].scrollHeight;	
 	document.getElementsByClassName('consoleTab')[3].click();
 }
