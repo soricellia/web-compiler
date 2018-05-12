@@ -254,7 +254,7 @@ function CodeGenerator(){
         		memory[currentMemLocX][currentMemLocY] = loadAccWithConst;
 				incrementMemY();
 	
-
+				console.log("name ", node.children[1].name)
 	        	// check whether to 0 pad or not
 	        	if(node.children[1].name.toString(16).length < 2){ 
 	        		memory[currentMemLocX][currentMemLocY] = "0" + node.children[1].name.toString(16);
@@ -263,7 +263,7 @@ function CodeGenerator(){
 	        		memory[currentMemLocX][currentMemLocY] = node.children[1].name.toString(16);
 	        		
 	        	}
-	        	incrementMemY();        		
+	        	incrementMemY();      		
         	}
         	else{
         		if(assignVar.variable.type == "string"){
@@ -282,6 +282,25 @@ function CodeGenerator(){
         			incrementMemY();
 
         		}
+        		else if(assignVar.variable.type == "boolean"){
+        			//load accumulator with constant
+        			memory[currentMemLocX][currentMemLocY] = loadAccWithConst;
+					incrementMemY();
+	
+					console.log(node.children[1].name)
+	        		// check whether true or false
+	        		if(node.children[1].name == "true"){ 
+	        			memory[currentMemLocX][currentMemLocY] = "01";
+	        		
+	        		}else{
+	        			memory[currentMemLocX][currentMemLocY] = "00";
+	        			
+	        		}
+	        		incrementMemY();  
+        		}
+        		else if(node.children[1].name == "Add"){
+
+        		}
         		else{
         			// were dealing with assigning a variable to another variable
 
@@ -290,6 +309,9 @@ function CodeGenerator(){
 					incrementMemY();
 
 					//temp address
+					console.log(lookUpStaticsVariable(scope, node.children[1].name))
+					console.log(scope);
+					console.log(node.children[1].name)
 					memory[currentMemLocX][currentMemLocY] = lookUpStaticsVariable(scope, node.children[1].name).temp;
 					incrementMemY();
 
@@ -462,7 +484,7 @@ function CodeGenerator(){
         					// back patch
         					memory[x][y] = statics[i].address;
 
-        					if(y == 16){
+        					if(y == 15){
         						memory[x+1][0] = "00";
         					}else{
         						memory[x][y+1] = "00";
@@ -471,6 +493,7 @@ function CodeGenerator(){
         			}
         		}
         	}
+        	console.log(memory[0], memory[1], memory[2]);
         }
 
         function writeToHeap(variable){
