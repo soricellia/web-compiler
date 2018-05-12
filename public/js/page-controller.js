@@ -64,7 +64,6 @@ $(document).ready(function(){
 							compileResults[i]['ast']['symbolTable']);
 						
 						if(compileResults[i]['ast']['errs'].length == 0){
-
 							// print code to console
 							printCodeToConsole(i+1,
 								compileResults[i]['codeGen']['errs'],

@@ -140,7 +140,7 @@ function CodeGenerator(){
 			} 
 			// See what's kind of node we are currently on and decides which function to call
 			else {
-				console.log(node.name + " at depth " + depth);
+				//console.log(node.name + " at depth " + depth);
 				
 				if (node.name == "Block"){
 					scope++;
@@ -183,14 +183,14 @@ function CodeGenerator(){
         function traverseBlock(node, depth) {
 			// Continues the traversal
 
-			console.log("Generating Code For Block");
+			//console.log("Generating Code For Block");
 			for (var i = 0; i < node.length; i++) {
                 traverseTree(node[i], depth + 1);
 			}
 		}
 
         function traverseVarDecl(node, depth){
-        	console.log("Generating Code For Var Decl");
+        	//console.log("Generating Code For Var Decl");
 
         	// 3 cases to worry about, int, boolean or string
         	if(node.children[0].name == "string"){
@@ -240,7 +240,7 @@ function CodeGenerator(){
 
         function traverseAssign(node, depth){
 
-        	console.log("Generating Code For Assignment");
+        	//console.log("Generating Code For Assignment");
         	
         	//lookup variable in statics and assign it a value
         	//assignStaticsVariable(scope, node.children[0].name, node.children[1].name);
@@ -254,7 +254,7 @@ function CodeGenerator(){
         		memory[currentMemLocX][currentMemLocY] = loadAccWithConst;
 				incrementMemY();
 	
-
+				//console.log("name ", node.children[1].name)
 	        	// check whether to 0 pad or not
 	        	if(node.children[1].name.toString(16).length < 2){ 
 	        		memory[currentMemLocX][currentMemLocY] = "0" + node.children[1].name.toString(16);
@@ -263,7 +263,7 @@ function CodeGenerator(){
 	        		memory[currentMemLocX][currentMemLocY] = node.children[1].name.toString(16);
 	        		
 	        	}
-	        	incrementMemY();        		
+	        	incrementMemY();      		
         	}
         	else{
         		if(assignVar.variable.type == "string"){
@@ -282,6 +282,25 @@ function CodeGenerator(){
         			incrementMemY();
 
         		}
+        		else if(assignVar.variable.type == "boolean"){
+        			//load accumulator with constant
+        			memory[currentMemLocX][currentMemLocY] = loadAccWithConst;
+					incrementMemY();
+	
+					//console.log(node.children[1].name)
+	        		// check whether true or false
+	        		if(node.children[1].name == "true"){ 
+	        			memory[currentMemLocX][currentMemLocY] = "01";
+	        		
+	        		}else{
+	        			memory[currentMemLocX][currentMemLocY] = "00";
+	        			
+	        		}
+	        		incrementMemY();  
+        		}
+        		else if(node.children[1].name == "Add"){
+
+        		}
         		else{
         			// were dealing with assigning a variable to another variable
 
@@ -290,6 +309,9 @@ function CodeGenerator(){
 					incrementMemY();
 
 					//temp address
+					//console.log(lookUpStaticsVariable(scope, node.children[1].name))
+					//console.log(scope);
+					//console.log(node.children[1].name)
 					memory[currentMemLocX][currentMemLocY] = lookUpStaticsVariable(scope, node.children[1].name).temp;
 					incrementMemY();
 
@@ -315,7 +337,7 @@ function CodeGenerator(){
         }
         
         function traversePrint(node, depth){
-        	console.log("Generating Code For Print");
+        	//console.log("Generating Code For Print");
 
         	var printVal = lookUpStaticsVariable(scope, node.children[0].name);
         	
@@ -326,7 +348,7 @@ function CodeGenerator(){
         	// $01 in x reg = print integer stored in the y reg
         	// $02 in x reg = print the 00-terminated string in y reg
 
-        	console.log("printVal: ", printVal);
+        	//console.log("printVal: ", printVal);
         	if(printVal.variable.type == "string"){
         		memory[currentMemLocX][currentMemLocY] = "02" //loading x register with 01 tells the syscall to print
 	        	incrementMemY();
@@ -354,35 +376,35 @@ function CodeGenerator(){
         }
         
         function traverseIf(node, depth){
-        	console.log("Generating Code For If");
+        	//console.log("Generating Code For If");
         	for (var i = 0; i < node.children.length; i++) {
                 traverseTree(node.children[i], depth + 1);
             }
         }
 
         function traverseWhile(node, depth){
-        	console.log("Generating Code For While");
+        	//console.log("Generating Code For While");
         	for (var i = 0; i < node.children.length; i++) {
                 traverseTree(node.children[i], depth + 1);
             }
         }
 
         function traverseAdd(node, depth){
-        	console.log("Generating Code For Add");
+        	//console.log("Generating Code For Add");
         	for (var i = 0; i < node.length; i++) {
                 traverseTree(node[i], depth + 1);
             }
         }
 
         function traverseEquals(node, depth){
-        	console.log("Generating Code For Equals");
+        	//console.log("Generating Code For Equals");
         	for (var i = 0; i < node.length; i++) {
                 traverseTree(node[i], depth + 1);
             }	
         }
 
         function traverseNotEquals(node, depth){
-        	console.log("Generating Code For Not Equals");
+        	//console.log("Generating Code For Not Equals");
         	for (var i = 0; i < node.length; i++) {
                 traverseTree(node[i], depth + 1);
             }	
@@ -462,7 +484,7 @@ function CodeGenerator(){
         					// back patch
         					memory[x][y] = statics[i].address;
 
-        					if(y == 16){
+        					if(y == 15){
         						memory[x+1][0] = "00";
         					}else{
         						memory[x][y+1] = "00";
